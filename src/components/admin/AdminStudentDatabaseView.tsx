@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Users, FileText, ChevronRight, X, Save, Award } from 'lucide-react';
-import type { Student } from '../../mockData';
+import { Users, FileText, ChevronRight, X, Save, Award, TrendingUp } from 'lucide-react';
+import type { Student, PlacementDrive, ResumeFeedback } from '../../mockData';
 import type { StudentWithPlacement } from '../../api/types';
+import { StudentVisualizerView } from '../student/StudentVisualizerView';
 
 interface AdminStudentDatabaseViewProps {
   filteredStudents: (Student | StudentWithPlacement)[];
@@ -45,8 +46,9 @@ interface AdminStudentDatabaseViewProps {
   setPlacedPackageInput: (v: string) => void;
   setActivePopoverStudent: (s: (Student | StudentWithPlacement) | null) => void;
   onUpdateStudentStatus: (studentId: string, company?: string, salaryPackage?: string) => void;
-  onSaveFeedback: (studentId: string, feedback: any) => void;
+  onSaveFeedback: (studentId: string, feedback: ResumeFeedback) => void;
   handleManualStatusSave: (studentId: string) => void;
+  drives?: PlacementDrive[];
 }
 
 export const AdminStudentDatabaseView: React.FC<AdminStudentDatabaseViewProps> = ({
@@ -75,9 +77,12 @@ export const AdminStudentDatabaseView: React.FC<AdminStudentDatabaseViewProps> =
   setPlacedPackageInput,
   onUpdateStudentStatus,
   onSaveFeedback,
-  handleManualStatusSave
+  handleManualStatusSave,
+  drives = []
 }) => {
   const [activeMobileStudent, setActiveMobileStudent] = useState<(Student | StudentWithPlacement) | null>(null);
+  const [selectedStudentForVisualizer, setSelectedStudentForVisualizer] = useState<(Student | StudentWithPlacement) | null>(null);
+  const [selectedAppId, setSelectedAppId] = useState<string>('');
 
   return (
     <div className="flex flex-col gap-6 animate-fade-in">
@@ -227,6 +232,14 @@ export const AdminStudentDatabaseView: React.FC<AdminStudentDatabaseViewProps> =
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => setSelectedStudentForVisualizer(student)}
+                        className="p-2.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 transition-colors cursor-pointer"
+                        title="View Selection Stage Pipeline"
+                      >
+                        <TrendingUp size={16} />
+                      </button>
+
                       <button
                         onClick={() => setSelectedStudentForResume(student)}
                         className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer"
@@ -518,7 +531,7 @@ export const AdminStudentDatabaseView: React.FC<AdminStudentDatabaseViewProps> =
                     ...review,
                     status: (['Good', 'Excellent', 'Needs Improvement'].includes(review.status)
                       ? review.status
-                      : 'Needs Improvement') as any,
+                      : 'Needs Improvement') as 'Good' | 'Excellent' | 'Needs Improvement',
                     reviewedBy: 'TPO Admin',
                     reviewedOn: new Date().toLocaleDateString()
                   });
@@ -529,6 +542,68 @@ export const AdminStudentDatabaseView: React.FC<AdminStudentDatabaseViewProps> =
                 <Save size={16} /> Save Feedback Review
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Stage Visualizer Modal for TPO */}
+      {selectedStudentForVisualizer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-4xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-slate-200 flex flex-col gap-6">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+                  <TrendingUp size={20} />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-slate-900 text-lg font-display">
+                    {selectedStudentForVisualizer.name}'s Placement Stage Visualizer
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium">
+                    {selectedStudentForVisualizer.department} • Student ID: {selectedStudentForVisualizer.id}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedStudentForVisualizer(null)}
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <StudentVisualizerView
+              currentStudent={'applications' in selectedStudentForVisualizer ? (selectedStudentForVisualizer as Student) : {
+                id: selectedStudentForVisualizer.id,
+                name: selectedStudentForVisualizer.name,
+                email: selectedStudentForVisualizer.email,
+                password: '',
+                department: selectedStudentForVisualizer.department,
+                branch: selectedStudentForVisualizer.department,
+                cgpa: selectedStudentForVisualizer.cgpa,
+                backlogs: selectedStudentForVisualizer.backlogs,
+                skills: ['React', 'TypeScript', 'Java'],
+                placementStatus: selectedStudentForVisualizer.placementStatus,
+                resumeScore: selectedStudentForVisualizer.resumeScore ?? 80,
+                projectsCount: selectedStudentForVisualizer.projectsCount ?? 2,
+                resumeText: selectedStudentForVisualizer.resumeText ?? '',
+                applications: [
+                  {
+                    jobPostingId: '1',
+                    driveId: '1',
+                    companyName: selectedStudentForVisualizer.placedCompany || 'Google',
+                    role: 'Associate Software Engineer',
+                    appliedDate: '2026-06-01',
+                    status: selectedStudentForVisualizer.placementStatus === 'Placed' ? 'Selected' : 'Applied',
+                    currentRoundIndex: 1,
+                    feedback: 'Candidate under evaluation by recruitment board.'
+                  }
+                ]
+              }}
+              drives={drives}
+              selectedApplicationId={selectedAppId || '1'}
+              setSelectedApplicationId={setSelectedAppId}
+            />
           </div>
         </div>
       )}

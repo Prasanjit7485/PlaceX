@@ -5,10 +5,24 @@ export interface StudentResponse {
   registrationNumber?: string;
   phone: string;
   department: string;
-  CGPA: number;
+  CGPA?: number;
+  cgpa?: number;
   activeBacklogs: number;
   resumeUrl: string;
   year: number;
+}
+
+export interface StudentRequest {
+  id: string;
+  name: string;
+  email: string;
+  password?: string;
+  phone: string;
+  department: string;
+  activeBacklogs?: number;
+  resumeUrl: string;
+  year: number;
+  cgpa?: number;
 }
 export interface CompanyResponse {
   id: number;
@@ -92,7 +106,7 @@ export interface RecruiterRequest {
   companyName: string;
   designation?: string;
 }
-export type Role = "TPO" | "RECRUITER" | "STUDENT";
+export type Role = "TPO" | "RECRUITER" | "STUDENT" | "ALUMNI";
 
 export interface LoginRequest {
   email: string;
@@ -198,4 +212,71 @@ export interface CalendarEvent {
   description?: string;
   status?: string;
   branches?: string[];
+  isPrivate?: boolean;
+}
+
+export interface StudentRoundVisualizerResponse {
+  studentId: string;
+  jobPostingId: number;
+  applicationId: number;
+  interviewRoundId?: number;
+  feedback?: string;
+  scheduledAt?: string;
+  status: string;
+  roundNumber?: number;
+  roundType?: string;
+  appliedDate?: string;
+}
+
+export interface TPOUserRequest {
+  name: string;
+  email: string;
+  password?: string;
+}
+
+export interface TPOUserResponse {
+  id: number;
+  name: string;
+  email: string;
+}
+
+export interface AlumniRequest {
+  id?: number;
+  email?: string;
+  password?: string;
+  name?: string;
+  bio?: string;
+  location?: string;
+  linkedinUrl?: string;
+  githubUrl?: string;
+  hashNodeUrl?: string;
+  devToUrl?: string;
+}
+
+export interface AlumniResponse {
+  id: number;
+  email: string;
+  name: string;
+  bio?: string;
+  location?: string;
+  linkedinUrl?: string;
+  githubUrl?: string;
+  hashNodeUrl?: string;
+  devToUrl?: string;
+}
+
+export interface AlumniBlogRequest {
+  id?: number;
+  title?: string;
+  description?: string;
+  alumniId: number;
+}
+
+export interface AlumniBlogResponse {
+  id: number;
+  title: string;
+  description: string;
+  updatedAt?: string;
+  createdAt?: string;
+  alumniId: number;
 }

@@ -1,6 +1,8 @@
 import request from "./client";
 import type {
   StudentResponse,
+  StudentRequest,
+  StudentRoundVisualizerResponse,
   ApplicationResponse,
   StudentWithPlacement,
 } from "./types";
@@ -11,6 +13,24 @@ export const studentApi = {
   getAll: () => request<StudentResponse[]>("/students/all"),
 
   getById: (id: string) => request<StudentResponse>(`/students/${id}`),
+
+  add: (data: StudentRequest) =>
+    request<StudentResponse>("/students/add", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  update: (data: StudentRequest) =>
+    request<StudentResponse>("/students/update", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+
+  delete: (id: string) =>
+    request<string>(`/students/delete/${id}`, { method: "DELETE" }),
+
+  getStageVisualizer: (id: string) =>
+    request<StudentRoundVisualizerResponse[]>(`/students/stageVisualizer/${id}`),
 
   getAllWithPlacementInfo: async (): Promise<StudentWithPlacement[]> => {
     const [students, applications, jobPostings] = await Promise.all([
@@ -38,7 +58,7 @@ export const studentApi = {
         name: s.name,
         email: s.email,
         department: s.department,
-        cgpa: s.CGPA,
+        cgpa: s.cgpa ?? s.CGPA ?? 0,
         backlogs: s.activeBacklogs,
         placementStatus: placedApp ? "Placed" : "Unplaced",
         placedCompany: placedApp?.companyName,

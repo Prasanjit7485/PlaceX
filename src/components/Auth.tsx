@@ -27,11 +27,8 @@ import {
 
 import type { Student, Recruiter } from '../mockData';
 import type { Alumni } from '../mockAlumni';
-
-import type {
-  AlumniRegistrationRequest,
-} from '../api/alumniApi';
-
+import type { AlumniRegistrationRequest } from '../api/alumniApi';
+import { authApi } from '../api/authApi';
 import { Footer } from './Footer';
 import './Auth.css';
 
@@ -174,126 +171,87 @@ export const Auth: React.FC<AuthProps> = ({
      ALUMNI REGISTRATION
   ========================================================= */
 
-  const [alumniName, setAlumniName] =
-    useState('');
-
-  const [alumniEmail, setAlumniEmail] =
-    useState('');
-
-  const [alumniPassword, setAlumniPassword] =
-    useState('');
-
-  const [alumniGraduationYear, setAlumniGraduationYear] =
-    useState(
-      new Date().getFullYear().toString()
-    );
-
-  const [alumniCompany, setAlumniCompany] =
-    useState('');
-
-  const [alumniCurrentRole, setAlumniCurrentRole] =
-    useState('');
-
-  const [alumniDepartment, setAlumniDepartment] =
-    useState<
-      | 'Computer Science'
-      | 'Information Technology'
-      | 'Electronics'
-      | 'Mechanical'
-      | 'Electrical'
-    >('Information Technology');
-
-  const [alumniLinkedIn, setAlumniLinkedIn] =
-    useState('');
+  const [alumniName, setAlumniName] = useState('');
+  const [alumniEmail, setAlumniEmail] = useState('');
+  const [alumniPassword, setAlumniPassword] = useState('');
+  const [alumniGraduationYear, setAlumniGraduationYear] = useState(
+    new Date().getFullYear().toString()
+  );
+  const [alumniCompany, setAlumniCompany] = useState('');
+  const [alumniCurrentRole, setAlumniCurrentRole] = useState('');
+  const [alumniDepartment, setAlumniDepartment] = useState<
+    | 'Computer Science'
+    | 'Information Technology'
+    | 'Electronics'
+    | 'Mechanical'
+    | 'Electrical'
+  >('Information Technology');
+  const [alumniLinkedIn, setAlumniLinkedIn] = useState('');
 
   /* =========================================================
      RECRUITER LOGIN / REGISTRATION
   ========================================================= */
 
-  const [recruiterEmail, setRecruiterEmail] =
-    useState('');
-
-  const [recruiterPassword, setRecruiterPassword] =
-    useState('');
-
-  const [recName, setRecName] =
-    useState('');
-
-  const [recCompany, setRecCompany] =
-    useState('');
-
-  const [recDesignation, setRecDesignation] =
-    useState('Technical Recruiter');
-
-  const [recEmail, setRecEmail] =
-    useState('');
-
-  const [recPassword, setRecPassword] =
-    useState('');
+  const [recruiterEmail, setRecruiterEmail] = useState('');
+  const [recruiterPassword, setRecruiterPassword] = useState('');
+  const [recName, setRecName] = useState('');
+  const [recCompany, setRecCompany] = useState('');
+  const [recDesignation, setRecDesignation] = useState('Technical Recruiter');
+  const [recEmail, setRecEmail] = useState('');
+  const [recPassword, setRecPassword] = useState('');
 
   /* =========================================================
      ADMIN CREDENTIALS
   ========================================================= */
 
-  const [adminEmail, setAdminEmail] =
-    useState('admin@university.edu');
-
-  const [adminPassword, setAdminPassword] =
-    useState('admin123');
+  const [adminEmail, setAdminEmail] = useState('admin@university.edu');
+  const [adminPassword, setAdminPassword] = useState('admin123');
 
   /* =========================================================
      STUDENT SUBMIT
   ========================================================= */
 
-  const handleStudentSubmit = (
-    e: React.FormEvent
-  ) => {
+  const handleStudentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     setError('');
 
     if (authMode === 'login') {
       setIsSubmitting(true);
-
-      window.setTimeout(() => {
-        const loginValue =
-          studentRegNo
-            .toLowerCase()
-            .trim();
-
+      try {
+        const loginEmail = studentRegNo.includes('@') ? studentRegNo.trim() : `${studentRegNo.trim()}@university.edu`;
+        const res = await authApi.login({
+          email: loginEmail,
+          password: studentPassword,
+          role: 'STUDENT'
+        });
+        if (res?.token) {
+          localStorage.setItem('token', res.token);
+        }
         const student = students.find(
           (s) =>
-            (
-              s.registrationNumber &&
-              s.registrationNumber
-                .toLowerCase()
-                .trim() === loginValue
-            ) ||
-            s.email
-              .toLowerCase()
-              .trim() === loginValue
+            (s.registrationNumber &&
+              s.registrationNumber.toLowerCase().trim() === studentRegNo.toLowerCase().trim()) ||
+            s.email.toLowerCase().trim() === studentRegNo.toLowerCase().trim()
+        );
+        onLogin('student', student?.id || 'std_1');
+      } catch {
+        const loginValue = studentRegNo.toLowerCase().trim();
+        const student = students.find(
+          (s) =>
+            (s.registrationNumber &&
+              s.registrationNumber.toLowerCase().trim() === loginValue) ||
+            s.email.toLowerCase().trim() === loginValue
         );
 
-        if (
-          student &&
-          student.password === studentPassword
-        ) {
+        if (student && student.password === studentPassword) {
           setError('');
-
-          onLogin(
-            'student',
-            student.id
-          );
+          onLogin('student', student.id);
         } else {
-          setError(
-            'Invalid credentials. Please check your registration number/email and password.'
-          );
+          setError('Invalid credentials. Please check your registration number/email and password.');
         }
-
+      } finally {
         setIsSubmitting(false);
-      }, 400);
-
-      return;
+      }
     }
 
     /* =====================================================
@@ -428,49 +386,45 @@ export const Auth: React.FC<AuthProps> = ({
      ALUMNI SUBMIT
   ========================================================= */
 
-  const handleAlumniSubmit = async (
-    e: React.FormEvent
-  ) => {
+  const handleAlumniSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     setError('');
-
-    /* =====================================================
-       ALUMNI LOGIN
-    ===================================================== */
 
     if (authMode === 'login') {
       setIsSubmitting(true);
-
-      window.setTimeout(() => {
-        const loginValue =
-          studentRegNo
-            .toLowerCase()
-            .trim();
-
-        if (activeRole === 'alumni' && authMode === 'login') {
-          const alumniAccount = alumni.find(
-            (a) =>
-              a.email.toLowerCase().trim() === loginValue &&
-              a.password === studentPassword
-          );
-
-          if (!alumniAccount) {
-            setError('Invalid alumni credentials.');
-          } else if (alumniAccount.alumniStatus !== 'APPROVED') {
-            setError('Your alumni account is still awaiting TPO approval.');
-          } else {
-            setError('');
-            onLogin('alumni', alumniAccount.id);
-          }
-
-          setIsSubmitting(false);
-          return;
+      try {
+        const loginEmail = studentRegNo.trim();
+        const res = await authApi.login({
+          email: loginEmail,
+          password: studentPassword,
+          role: 'ALUMNI'
+        });
+        if (res?.token) {
+          localStorage.setItem('token', res.token);
         }
+        const alumniAccount = alumni.find(
+          (a) => a.email.toLowerCase().trim() === loginEmail.toLowerCase()
+        );
+        onLogin('alumni', alumniAccount?.id || 'alm_1');
+      } catch {
+        const loginValue = studentRegNo.toLowerCase().trim();
+        const alumniAccount = alumni.find(
+          (a) =>
+            a.email.toLowerCase().trim() === loginValue &&
+            a.password === studentPassword
+        );
 
+        if (!alumniAccount) {
+          setError('Invalid alumni credentials.');
+        } else if (alumniAccount.alumniStatus !== 'APPROVED') {
+          setError('Your alumni account is still awaiting TPO approval.');
+        } else {
+          setError('');
+          onLogin('alumni', alumniAccount.id);
+        }
+      } finally {
         setIsSubmitting(false);
-      }, 400);
-
+      }
       return;
     }
 
@@ -645,48 +599,39 @@ try {
      RECRUITER SUBMIT
   ========================================================= */
 
-  const handleRecruiterSubmit = (
-    e: React.FormEvent
-  ) => {
+  const handleRecruiterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     setError('');
 
     if (authMode === 'login') {
       setIsSubmitting(true);
-
-      window.setTimeout(() => {
-        const recruiter =
-          recruiters.find(
-            (r) =>
-              r.email
-                .toLowerCase()
-                .trim() ===
-              recruiterEmail
-                .toLowerCase()
-                .trim()
-          );
-
-        if (
-          recruiter &&
-          recruiter.password ===
-            recruiterPassword
-        ) {
-          setError('');
-
-          onLogin(
-            'recruiter',
-            recruiter.id
-          );
-        } else {
-          setError(
-            'Invalid recruiter credentials. Please check work email/password.'
-          );
+      try {
+        const res = await authApi.login({
+          email: recruiterEmail.trim(),
+          password: recruiterPassword,
+          role: 'RECRUITER'
+        });
+        if (res?.token) {
+          localStorage.setItem('token', res.token);
         }
-
+        const recruiter = recruiters.find(
+          (r) => r.email.toLowerCase().trim() === recruiterEmail.toLowerCase().trim()
+        );
+        onLogin('recruiter', recruiter?.id || 'rec_1');
+      } catch {
+        const recruiter = recruiters.find(
+          (r) => r.email.toLowerCase().trim() === recruiterEmail.toLowerCase().trim()
+        );
+        if (recruiter && recruiter.password === recruiterPassword) {
+          setError('');
+          onLogin('recruiter', recruiter.id);
+        } else {
+          setError('Invalid recruiter credentials. Please check work email/password.');
+        }
+      } finally {
         setIsSubmitting(false);
-      }, 400);
-
+      }
       return;
     }
 
@@ -765,33 +710,34 @@ try {
      ADMIN SUBMIT
   ========================================================= */
 
-  const handleAdminSubmit = (
-    e: React.FormEvent
-  ) => {
+  const handleAdminSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     setError('');
     setIsSubmitting(true);
 
-    window.setTimeout(() => {
+    try {
+      const res = await authApi.login({
+        email: adminEmail.trim(),
+        password: adminPassword,
+        role: 'TPO'
+      });
+      if (res?.token) {
+        localStorage.setItem('token', res.token);
+      }
+      onLogin('admin');
+    } catch {
       if (
-        adminEmail
-          .toLowerCase()
-          .trim() ===
-          'admin@university.edu' &&
+        adminEmail.toLowerCase().trim() === 'admin@university.edu' &&
         adminPassword === 'admin123'
       ) {
         setError('');
-
         onLogin('admin');
       } else {
-        setError(
-          'Invalid admin credentials. Use: admin@university.edu / admin123'
-        );
+        setError('Invalid admin credentials. Use: admin@university.edu / admin123');
       }
-
+    } finally {
       setIsSubmitting(false);
-    }, 400);
+    }
   };
 
   /* =========================================================

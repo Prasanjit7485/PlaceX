@@ -41,31 +41,32 @@ interface AlumniPortalProps {
   onLogout: () => void;
 
   onCreateBlog: (
-  blogData: Omit<Blog, 'id' | 'alumniId' | 'postedDate'>
-) => Promise<void>;
+    blogData: Omit<Blog, 'id' | 'alumniId' | 'postedDate'>
+  ) => Promise<void>;
 
   onUpdateBlog: (
-  id: string,
-  data: {
-    title: string;
-    content: string;
-    category: BlogCategory;
-    published: boolean;
-  }
-) => Promise<void>;
+    id: string,
+    data: {
+      title: string;
+      content: string;
+      category: BlogCategory;
+      published: boolean;
+    }
+  ) => Promise<void>;
 
-onDeleteBlog: (id: string) => Promise<void>;
+  onDeleteBlog: (id: string) => Promise<void>;
 
-onCreateReferral: (
-  referralData: Omit<Referral, 'id' | 'alumniId' | 'postedDate'>
-) => Promise<void>;
+  onCreateReferral: (
+    referralData: Omit<Referral, 'id' | 'alumniId' | 'postedDate'>
+  ) => Promise<void>;
 
-onUpdateReferral: (
-  id: string,
-  data: Partial<Referral>
-) => Promise<void>;
+  onUpdateReferral: (
+    id: string,
+    data: Partial<Referral>
+  ) => Promise<void>;
 
-onDeleteReferral: (id: string) => Promise<void>;}
+  onDeleteReferral: (id: string) => Promise<void>;
+}
 
 const categories: BlogCategory[] = [
   'Interview Experience',

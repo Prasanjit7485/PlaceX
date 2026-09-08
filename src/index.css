@@ -3360,6 +3360,9 @@ tr:hover td {
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1) !important;
   transition: transform 0.15s ease, box-shadow 0.15s ease !important;
   border: none !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
 }
 
 .fc .fc-daygrid-event:hover {
@@ -3367,7 +3370,16 @@ tr:hover td {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15) !important;
 }
 
+.fc .fc-daygrid-event .fc-event-main {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
 .fc .fc-event-title {
   font-weight: 700 !important;
   line-height: 1.25 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
 }

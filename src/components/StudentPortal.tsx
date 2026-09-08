@@ -5,7 +5,7 @@ import { Menu } from 'lucide-react';
 import type { Student, PlacementDrive } from '../mockData';
 import type { CalendarEvent } from '../api/types';
 import type { Alumni, Blog, Referral } from '../api/alumniApi';
-
+import { studentApi } from '../api/studentApi';
 import { Footer } from './Footer';
 import CalendarPage from './calendar/CalendarPage';
 
@@ -302,6 +302,22 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
       alert('Backlogs cannot be negative.');
       return;
     }
+
+    const id12 = currentStudent.id.length === 12 ? currentStudent.id : (currentStudent.id.replace(/\D/g, '').padStart(12, '0')).slice(-12);
+    studentApi.update({
+      id: id12,
+      name: profileName.trim(),
+      email: profileEmail.trim(),
+      password: profilePassword || "password123",
+      phone: "9876543210",
+      department: profileBranch,
+      activeBacklogs: backlogsNum,
+      resumeUrl: "http://example.com/resume.pdf",
+      year: 4,
+      cgpa: cgpaNum
+    }).catch(() => {
+      // Silently fall back if backend is offline
+    });
 
     const updatedStudent: Student = {
       ...currentStudent,

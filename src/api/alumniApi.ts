@@ -1,44 +1,4 @@
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  'http://localhost:8080';
-
-const request = async <T>(
-  endpoint: string,
-  options?: RequestInit
-): Promise<T> => {
-  const response = await fetch(
-    `${API_BASE_URL}${endpoint}`,
-    {
-      headers: {
-        'Content-Type': 'application/json',
-        ...(options?.headers || {}),
-      },
-      ...options,
-    }
-  );
-
-  if (!response.ok) {
-    let message = 'Something went wrong';
-
-    try {
-      const errorData = await response.json();
-      message =
-        errorData.message ||
-        errorData.error ||
-        message;
-    } catch {
-      // Ignore JSON parsing failure
-    }
-
-    throw new Error(message);
-  }
-
-  if (response.status === 204) {
-    return undefined as T;
-  }
-
-  return response.json();
-};
+import request from "./client";
 
 export type AlumniStatus = 'PENDING' | 'APPROVED';
 
@@ -52,7 +12,7 @@ export interface Alumni {
   id: string;
   name: string;
   email: string;
-  password: string;
+  password?: string;
 
   graduationYear: number;
   currentCompany: string;
@@ -85,14 +45,12 @@ export interface Referral {
 
 /*
  * Request contracts.
- * These are the objects that can later be sent directly
- * to your Spring Boot APIs.
  */
 
 export interface AlumniRegistrationRequest {
   name: string;
   email: string;
-  password: string;
+  password?: string;
   graduationYear: number;
   currentCompany: string;
   currentRole: string;
@@ -102,7 +60,7 @@ export interface AlumniRegistrationRequest {
 
 export interface AlumniLoginRequest {
   email: string;
-  password: string;
+  password?: string;
 }
 
 export interface AlumniProfileRequest {
@@ -113,7 +71,6 @@ export interface AlumniProfileRequest {
   department: string;
   linkedIn: string;
 }
-
 
 export interface BlogRequest {
   title: string;
@@ -130,9 +87,7 @@ export interface ReferralRequest {
 }
 
 /*
- * Local frontend repository.
- * This is only persistence for the frontend while
- * the backend APIs are being integrated.
+ * Local frontend repository storage keys.
  */
 
 const ALUMNI_KEY = 'placex_alumni';
@@ -145,161 +100,127 @@ const write = <T>(key: string, value: T) => {
 
 export const alumniApi = {
   async getAll(): Promise<Alumni[]> {
-  return request<Alumni[]>('/api/alumni');
-},
+    return request<Alumni[]>('/api/alumni');
+  },
+
+  async getById(id: string | number): Promise<Alumni> {
+    return request<Alumni>(`/api/alumni/${id}`);
+  },
 
   saveAll(alumni: Alumni[]) {
     write(ALUMNI_KEY, alumni);
   },
 
-  async register(
-  requestData: AlumniRegistrationRequest
-): Promise<Alumni> {
-  return request<Alumni>(
-    '/api/alumni/register',
-    {
+  async register(requestData: AlumniRegistrationRequest): Promise<Alumni> {
+    return request<Alumni>('/api/alumni/register', {
       method: 'POST',
       body: JSON.stringify(requestData),
-    }
-  );
-},
+    });
+  },
 
-  async login(
-  requestData: AlumniLoginRequest
-): Promise<Alumni> {
-  return request<Alumni>(
-    '/api/alumni/login',
-    {
+  async add(requestData: AlumniRegistrationRequest): Promise<Alumni> {
+    return request<Alumni>('/api/alumni/register', {
       method: 'POST',
       body: JSON.stringify(requestData),
-    }
-  );
-},
+    });
+  },
+
+  async login(requestData: AlumniLoginRequest): Promise<Alumni> {
+    return request<Alumni>('/api/alumni/login', {
+      method: 'POST',
+      body: JSON.stringify(requestData),
+    });
+  },
 
   async approve(id: string): Promise<void> {
-  await request<void>(
-    `/api/alumni/${id}/approve`,
-    {
+    await request<void>(`/api/alumni/${id}/approve`, {
       method: 'PUT',
-    }
-  );
-},
+    });
+  },
 
   async reject(id: string): Promise<void> {
-  await request<void>(
-    `/api/alumni/${id}/reject`,
-    {
+    await request<void>(`/api/alumni/${id}/reject`, {
       method: 'DELETE',
-    }
-  );
-},
+    });
+  },
 
   async getBlogs(): Promise<Blog[]> {
-  return request<Blog[]>(
-    '/api/alumni/blogs'
-  );
-},
+    return request<Blog[]>('/api/alumni/blogs');
+  },
 
   saveBlogs(blogs: Blog[]) {
     write(BLOG_KEY, blogs);
   },
 
-  async createBlog(
-  alumniId: string,
-  requestData: BlogRequest
-): Promise<Blog> {
-  return request<Blog>(
-    `/api/alumni/${alumniId}/blogs`,
-    {
+  async createBlog(alumniId: string, requestData: BlogRequest): Promise<Blog> {
+    return request<Blog>(`/api/alumni/${alumniId}/blogs`, {
       method: 'POST',
       body: JSON.stringify(requestData),
-    }
-  );
-},
+    });
+  },
 
-  async updateBlog(
-  id: string,
-  requestData: BlogRequest
-): Promise<Blog> {
-  return request<Blog>(
-    `/api/alumni/blogs/${id}`,
-    {
+  async updateBlog(id: string, requestData: BlogRequest): Promise<Blog> {
+    return request<Blog>(`/api/alumni/blogs/${id}`, {
       method: 'PUT',
       body: JSON.stringify(requestData),
-    }
-  );
-},
+    });
+  },
 
   async deleteBlog(id: string): Promise<void> {
-  await request<void>(
-    `/api/alumni/blogs/${id}`,
-    {
+    await request<void>(`/api/alumni/blogs/${id}`, {
       method: 'DELETE',
-    }
-  );
-},
+    });
+  },
 
   async getReferrals(): Promise<Referral[]> {
-  return request<Referral[]>(
-    '/api/alumni/referrals'
-  );
-},
+    return request<Referral[]>('/api/alumni/referrals');
+  },
 
   saveReferrals(referrals: Referral[]) {
     write(REFERRAL_KEY, referrals);
   },
 
-  async createReferral(
-  alumniId: string,
-  requestData: ReferralRequest
-): Promise<Referral> {
-  return request<Referral>(
-    `/api/alumni/${alumniId}/referrals`,
-    {
+  async createReferral(alumniId: string, requestData: ReferralRequest): Promise<Referral> {
+    return request<Referral>(`/api/alumni/${alumniId}/referrals`, {
       method: 'POST',
       body: JSON.stringify(requestData),
-    }
-  );
-},
+    });
+  },
 
-  async updateReferral(
-  id: string,
-  requestData: ReferralRequest
-): Promise<Referral> {
-  return request<Referral>(
-    `/api/alumni/referrals/${id}`,
-    {
+  async updateReferral(id: string, requestData: ReferralRequest): Promise<Referral> {
+    return request<Referral>(`/api/alumni/referrals/${id}`, {
       method: 'PUT',
       body: JSON.stringify(requestData),
-    }
-  );
-},
+    });
+  },
 
   async deleteReferral(id: string): Promise<void> {
-  await request<void>(
-    `/api/alumni/referrals/${id}`,
-    {
+    await request<void>(`/api/alumni/referrals/${id}`, {
       method: 'DELETE',
-    }
-  );
+    });
   },
+
   async getProfile(id: string): Promise<Alumni> {
-  return request<Alumni>(
-    `/api/alumni/${id}`
-  );
-},
-async updateProfile(
-  id: string,
-  requestData: AlumniProfileRequest
-): Promise<Alumni> {
-  return request<Alumni>(
-    `/api/alumni/${id}`,
-    {
+    return request<Alumni>(`/api/alumni/${id}`);
+  },
+
+  async updateProfile(id: string, requestData: AlumniProfileRequest): Promise<Alumni> {
+    return request<Alumni>(`/api/alumni/${id}`, {
       method: 'PUT',
       body: JSON.stringify(requestData),
-    }
-  );
-}
+    });
+  },
 
+  async update(id: string | number, requestData: Partial<Alumni>): Promise<Alumni> {
+    return request<Alumni>(`/api/alumni/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(requestData),
+    });
+  },
+
+  async delete(id: string | number): Promise<void> {
+    await request<void>(`/api/alumni/${id}`, {
+      method: 'DELETE',
+    });
+  },
 };
-

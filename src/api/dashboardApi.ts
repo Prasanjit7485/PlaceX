@@ -20,7 +20,7 @@ export const dashboardApi = {
 
     return {
       applicationsSubmitted: stats.applicationsSubmitted,
-      CGPA: student.CGPA,
+      CGPA: student.CGPA ?? student.cgpa ?? 0,
       activeBacklogs: student.activeBacklogs,
     };
   },

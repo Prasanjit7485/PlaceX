@@ -1,19 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
-  BarChart3,
-  BriefcaseBusiness,
-  CalendarDays,
-  ChevronLeft,
-  ChevronRight,
-  FileCheck2,
+  Menu,
+  X,
   GraduationCap,
   LayoutDashboard,
+  Briefcase,
+  Calendar as CalendarIcon,
+  Sparkles,
   MessageSquareText,
-  UserRound
+  GitMerge,
+  Users,
+  User
 } from 'lucide-react';
-
 import type { Student } from '../../mockData';
-import './StudentSidebar.css';
+
 export type StudentTabType =
   | 'dashboard'
   | 'drives'
@@ -32,13 +32,6 @@ interface StudentSidebarProps {
   currentStudent: Student;
 }
 
-interface SidebarItem {
-  id: StudentTabType;
-  label: string;
-  icon: React.ReactNode;
-  description: string;
-}
-
 export const StudentSidebar: React.FC<StudentSidebarProps> = ({
   activeTab,
   setActiveTab,
@@ -46,143 +39,127 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
   onToggleExpand,
   currentStudent
 }) => {
-  const navigationItems: SidebarItem[] = [
-    {
-      id: 'dashboard',
-      label: 'Dashboard',
-      icon: <LayoutDashboard size={19} />,
-      description: 'Overview'
-    },
-    {
-      id: 'drives',
-      label: 'Placement Drives',
-      icon: <BriefcaseBusiness size={19} />,
-      description: 'Explore opportunities'
-    },
-    {
-      id: 'calendar',
-      label: 'Calendar',
-      icon: <CalendarDays size={19} />,
-      description: 'Your schedule'
-    },
-    {
-      id: 'ats',
-      label: 'ATS Resume Scorer',
-      icon: <FileCheck2 size={19} />,
-      description: 'Optimize your resume'
-    },
-    {
-      id: 'interview',
-      label: 'Mock Interview',
-      icon: <MessageSquareText size={19} />,
-      description: 'Practice interviews'
-    },
-    {
-      id: 'visualizer',
-      label: 'Application Pipeline',
-      icon: <BarChart3 size={19} />,
-      description: 'Track applications'
-    },
-    {
-      id: 'alumni',
-      label: 'Alumni Corner',
-      icon: <GraduationCap size={19} />,
-      description: 'Blogs & referrals'
-    },
-    {
-      id: 'profile',
-      label: 'Profile',
-      icon: <UserRound size={19} />,
-      description: 'Manage your profile'
-    }
+  const [hoveredItem, setHoveredItem] = useState<{ id: string; label: string; y: number } | null>(null);
+
+  const navItems = [
+    { id: 'dashboard' as StudentTabType, label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'drives' as StudentTabType, label: 'Placement Drives', icon: Briefcase },
+    { id: 'calendar' as StudentTabType, label: 'Placement Calendar', icon: CalendarIcon },
+    { id: 'ats' as StudentTabType, label: 'ATS Resume Scorer', icon: Sparkles },
+    { id: 'interview' as StudentTabType, label: 'Mock Interview', icon: MessageSquareText },
+    { id: 'visualizer' as StudentTabType, label: 'Stage Visualizer', icon: GitMerge },
+    { id: 'alumni' as StudentTabType, label: 'Alumni Network', icon: Users },
+    { id: 'profile' as StudentTabType, label: 'My Profile', icon: User }
   ];
 
+  const handleMouseEnter = (e: React.MouseEvent<HTMLButtonElement>, id: string, label: string) => {
+    if (isExpanded) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const centerY = rect.top + rect.height / 2;
+    setHoveredItem({ id, label, y: centerY });
+  };
+
+  const handleMouseLeave = () => {
+    setHoveredItem(null);
+  };
+
   return (
-    <aside
-      className={`student-sidebar ${
-        isExpanded ? 'student-sidebar-expanded' : 'student-sidebar-collapsed'
-      }`}
-    >
-      {/* Sidebar Brand */}
-      <div className="student-sidebar-brand">
-        <div className="student-sidebar-brand-icon">
-          <GraduationCap size={20} />
-        </div>
-
-        {isExpanded && (
-          <div className="student-sidebar-brand-text">
-            <strong>Student Portal</strong>
-            <span>PlaceX</span>
-          </div>
-        )}
-      </div>
-
-      {/* Student mini profile */}
-      <div className="student-sidebar-user">
-        <div className="student-sidebar-avatar">
-          {currentStudent.name.charAt(0).toUpperCase()}
-        </div>
-
-        {isExpanded && (
-          <div className="student-sidebar-user-info">
-            <strong>{currentStudent.name}</strong>
-            <span>{currentStudent.department}</span>
-          </div>
-        )}
-      </div>
-
-      {/* Navigation */}
-      <nav className="student-sidebar-nav">
-        <div className="student-sidebar-nav-label">
-          {isExpanded ? 'NAVIGATION' : 'MENU'}
-        </div>
-
-        {navigationItems.map((item) => {
-          const isActive = activeTab === item.id;
-
-          return (
-            <button
-              key={item.id}
-              type="button"
-              className={`student-sidebar-item ${
-                isActive ? 'student-sidebar-item-active' : ''
-              }`}
-              onClick={() => setActiveTab(item.id)}
-              title={!isExpanded ? item.label : undefined}
-            >
-              <span className="student-sidebar-item-icon">
-                {item.icon}
-              </span>
-
-              {isExpanded && (
-                <span className="student-sidebar-item-content">
-                  <strong>{item.label}</strong>
-                  <small>{item.description}</small>
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </nav>
-
-      {/* Expand / collapse */}
-      <div className="student-sidebar-bottom">
-        <button
-          type="button"
-          className="student-sidebar-expand-button"
-          onClick={onToggleExpand}
-          title={isExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
-        >
+    <>
+      <aside
+        className={`sp-sidebar hidden md:flex ${
+          isExpanded ? 'sp-sidebar-expanded' : 'sp-sidebar-collapsed'
+        }`}
+      >
+        {/* Top Header: Toggle Button (☰) when Collapsed OR Close Button (✕) when Expanded */}
+        <div className="sp-sidebar-header">
           {isExpanded ? (
-            <>
-              <ChevronLeft size={18} />
-              <span>Collapse</span>
-            </>
+            <div className="sp-brand-box">
+              <div className="sp-brand-icon-box">
+                <GraduationCap size={22} />
+              </div>
+              <div className="flex flex-col min-w-0">
+                <span className="sp-brand-text leading-none">PlaceX Student</span>
+                <span className="text-[10px] text-blue-600 font-bold uppercase tracking-wider mt-0.5">
+                  Student Portal
+                </span>
+              </div>
+            </div>
           ) : (
-            <ChevronRight size={18} />
+            <div className="w-full flex justify-center">
+              <button
+                onClick={onToggleExpand}
+                onMouseEnter={(e) => handleMouseEnter(e, 'expand-btn', 'Expand Navigation')}
+                onMouseLeave={handleMouseLeave}
+                className="sp-sidebar-toggle-btn"
+                aria-label="Expand Sidebar (☰)"
+                title="Expand Sidebar"
+              >
+                <Menu size={20} />
+              </button>
+            </div>
           )}
-        </button>
-      </div>
-    </aside>
+
+          {isExpanded && (
+            <button
+              onClick={onToggleExpand}
+              className="sp-sidebar-toggle-btn"
+              aria-label="Collapse Sidebar (✕)"
+              title="Collapse Sidebar"
+            >
+              <X size={20} />
+            </button>
+          )}
+        </div>
+
+        {/* Student Profile Card (Rendered when Expanded) */}
+        {isExpanded && (
+          <div className="sp-sidebar-profile-card">
+            <div className="sp-avatar-circle">
+              {currentStudent.name ? currentStudent.name.charAt(0).toUpperCase() : 'S'}
+            </div>
+            <div className="flex flex-col min-w-0 flex-1">
+              <span className="text-xs font-bold text-slate-900 truncate" title={currentStudent.name}>
+                {currentStudent.name}
+              </span>
+              <span className="text-[10px] text-blue-600 font-bold uppercase tracking-wider truncate">
+                {currentStudent.department}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Navigation List */}
+        <nav className="sp-sidebar-nav">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                onMouseEnter={(e) => handleMouseEnter(e, item.id, item.label)}
+                onMouseLeave={handleMouseLeave}
+                className={`sp-nav-item ${isActive ? 'active' : ''}`}
+                aria-label={item.label}
+              >
+                <Icon size={20} className="sp-nav-icon" />
+                {isExpanded && <span className="sp-nav-label">{item.label}</span>}
+              </button>
+            );
+          })}
+        </nav>
+      </aside>
+
+      {/* Floating Hover Tooltip (Rendered outside overflow bounds when Collapsed) */}
+      {!isExpanded && hoveredItem && (
+        <div
+          className="sp-fixed-tooltip"
+          style={{ top: `${hoveredItem.y}px` }}
+        >
+          {hoveredItem.label}
+        </div>
+      )}
+    </>
   );
 };
