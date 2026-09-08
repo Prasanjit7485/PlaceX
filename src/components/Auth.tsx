@@ -29,6 +29,8 @@ import type { Student, Recruiter } from '../mockData';
 import type { Alumni } from '../mockAlumni';
 import type { AlumniRegistrationRequest } from '../api/alumniApi';
 import { authApi } from '../api/authApi';
+import { studentApi } from '../api/studentApi';
+import { recruiterApi } from '../api/recruiterApi';
 import { Footer } from './Footer';
 import './Auth.css';
 
@@ -363,6 +365,23 @@ export const Auth: React.FC<AuthProps> = ({
       department: regBranch
     };
 
+    try {
+      await studentApi.add({
+        id: newStudent.id,
+        name: newStudent.name,
+        email: newStudent.email,
+        password: newStudent.password || 'password',
+        phone: '0000000000',
+        department: newStudent.department,
+        resumeUrl: newStudent.resumeText || '',
+        year: new Date().getFullYear(),
+        cgpa: newStudent.cgpa,
+        activeBacklogs: 0
+      });
+    } catch {
+      // Backend offline or erroring fallback
+    }
+
     onRegister(newStudent);
 
     setStudentRegNo(
@@ -684,6 +703,18 @@ try {
         recDesignation.trim() ||
         'Recruiter'
     };
+
+    try {
+      await recruiterApi.register({
+        name: newRecruiter.name,
+        email: newRecruiter.email,
+        password: newRecruiter.password || 'password',
+        companyName: newRecruiter.companyName,
+        designation: newRecruiter.designation
+      });
+    } catch {
+      // Backend offline fallback
+    }
 
     onRegisterRecruiter(
       newRecruiter

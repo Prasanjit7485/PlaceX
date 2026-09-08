@@ -96,7 +96,8 @@ export interface RecruiterResponse {
   name: string;
   email: string;
   companyName: string;
-  designation: string;
+  designation?: string;
+  industry?: string;
   recruiterStatus: RecruiterStatus;
 }
 export interface RecruiterRequest {
@@ -105,6 +106,7 @@ export interface RecruiterRequest {
   password: string;
   companyName: string;
   designation?: string;
+  industry?: string;
 }
 export type Role = "TPO" | "RECRUITER" | "STUDENT" | "ALUMNI";
 
