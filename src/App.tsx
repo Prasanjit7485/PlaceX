@@ -51,6 +51,12 @@ import {
   type AlumniRegistrationRequest
 } from './api/alumniApi';
 
+import { studentApi } from './api/studentApi';
+import { jobPostingApi } from './api/jobPostingApi';
+import { recruiterApi } from './api/recruiterApi';
+import { calendarApi } from './api/calendarApi';
+import { applicationApi } from './api/applicationApi';
+
 import {
   GraduationCap,
   LogOut,
@@ -297,36 +303,104 @@ function AppContent() {
   useState<Referral[]>([]);
 
   useEffect(() => {
-  const loadAlumniData = async () => {
-    try {
-      const [
-        alumniData,
-        blogsData,
-        referralsData,
-      ] = await Promise.all([
-        alumniApi.getAll(),
-        alumniApi.getBlogs(),
-        alumniApi.getReferrals(),
-      ]);
+    const loadBackendData = async () => {
+      try {
+        const [
+          alumniData,
+          blogsData,
+          referralsData,
+          studentsWithPlacement,
+          drivesWithCompany,
+          recruitersList,
+          eventsList
+        ] = await Promise.all([
+          alumniApi.getAll().catch(() => []),
+          alumniApi.getBlogs().catch(() => []),
+          alumniApi.getReferrals().catch(() => []),
+          studentApi.getAllWithPlacementInfo().catch(() => []),
+          jobPostingApi.getAllWithCompanyInfo().catch(() => []),
+          recruiterApi.getAll().catch(() => []),
+          calendarApi.getAll().catch(() => []),
+        ]);
 
-      setAlumni(alumniData);
-      setBlogs(blogsData);
-      setReferrals(referralsData);
-    } catch (error) {
-      console.error(
-        'Failed to load alumni data:',
-        error
-      );
+        if (alumniData.length > 0) setAlumni(alumniData);
+        if (blogsData.length > 0) setBlogs(blogsData);
+        if (referralsData.length > 0) setReferrals(referralsData);
 
-      triggerToast(
-        'Unable to load alumni data from server.',
-        'error'
-      );
-    }
-  };
+        if (studentsWithPlacement.length > 0) {
+          const mappedStudents: Student[] = studentsWithPlacement.map((s) => ({
+            id: s.id,
+            name: s.name,
+            email: s.email,
+            registrationNumber: s.id,
+            password: 'password123',
+            branch: s.department,
+            cgpa: s.cgpa,
+            backlogs: s.backlogs,
+            placementStatus: s.placementStatus,
+            placedCompany: s.placedCompany,
+            placedPackage: s.placedPackage,
+            resumeScore: s.resumeScore || 85,
+            skills: ['Java', 'React', 'Spring Boot'],
+            projectsCount: s.projectsCount || 2,
+            resumeText: s.resumeText || '',
+            applications: [],
+            department: s.department,
+          }));
+          setStudents(mappedStudents);
+        }
 
-  loadAlumniData();
-}, []);
+        if (drivesWithCompany.length > 0) {
+          const mappedDrives: PlacementDrive[] = drivesWithCompany.map((d) => ({
+            id: d.id,
+            companyName: d.companyName,
+            companyId: d.companyId,
+            companyLogo: 'https://images.unsplash.com/photo-1549923746-c502d488b3ea?auto=format&fit=crop&q=80&w=200',
+            role: d.title,
+            title: d.title,
+            description: d.description,
+            jobDesc: d.description || '',
+            package: d.package,
+            numericPackage: d.numericPackage,
+            cgpaCutoff: d.cgpaCutoff,
+            maxBacklogs: d.maxBacklogs,
+            allowedBranches: d.allowedBranches.length > 0 ? d.allowedBranches : ['Computer Science', 'Information Technology'],
+            eligibleBatch: d.eligibleBatch || '2025',
+            deadline: d.deadline,
+            location: d.location || 'Bangalore',
+            skillsRequired: d.skillsRequired.length > 0 ? d.skillsRequired : ['Java', 'Problem Solving'],
+            status: d.status,
+            registeredCount: d.registeredCount,
+            rounds: ['Online Assessment', 'Technical Interview', 'HR Interview']
+          }));
+          setDrives(mappedDrives);
+        }
+
+        if (recruitersList.length > 0) {
+          const mappedRecruiters: Recruiter[] = recruitersList.map((r) => ({
+            id: String(r.id),
+            name: r.name,
+            email: r.email,
+            password: 'password123',
+            companyName: r.companyName,
+            companyId: r.id,
+            designation: r.designation || 'Technical Recruiter',
+            industry: r.industry || 'IT Services',
+            postedDrives: []
+          }));
+          setRecruiters(mappedRecruiters);
+        }
+
+        if (eventsList.length > 0) {
+          setCalendarEvents(eventsList);
+        }
+      } catch (error) {
+        console.error('Failed to load initial backend data:', error);
+      }
+    };
+
+    loadBackendData();
+  }, []);
 
 
   /* =======================================================
@@ -691,6 +765,15 @@ function AppContent() {
       status: 'Applied',
       currentRoundIndex: 0,
     };
+
+    const numericStudentId = student.id.length === 12 ? student.id : (student.id.replace(/\D/g, '').padStart(12, '0')).slice(-12);
+    const jobPostingIdNum = parseInt(drive.id, 10);
+    if (!isNaN(jobPostingIdNum)) {
+      applicationApi.create({
+        studentId: numericStudentId,
+        jobPostingId: jobPostingIdNum
+      }).catch((err) => console.warn('Backend application create warning:', err));
+    }
 
 
     setStudents(

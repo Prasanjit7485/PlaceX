@@ -9,22 +9,49 @@ import type {
 import { applicationApi } from "./applicationApi";
 import { jobPostingApi } from "./jobPostingApi";
 
+function normalizeDepartment(dept?: string): string {
+  if (!dept) return "Computer Science";
+  const d = dept.trim().toLowerCase();
+  if (d === "cse" || d.includes("computer")) return "Computer Science";
+  if (d === "it" || d.includes("information")) return "Information Technology";
+  if (d === "ece" || d === "eee" || d.includes("electronics")) return "Electronics";
+  if (d === "mech" || d.includes("mechanical")) return "Mechanical";
+  if (d.includes("electrical")) return "Electrical";
+  return dept;
+}
+
 export const studentApi = {
   getAll: () => request<StudentResponse[]>("/students/all"),
 
   getById: (id: string) => request<StudentResponse>(`/students/${id}`),
 
-  add: (data: StudentRequest) =>
-    request<StudentResponse>("/students/add", {
+  add: (data: StudentRequest) => {
+    const cgpaVal = data.CGPA ?? data.cgpa ?? 0;
+    const payload = {
+      ...data,
+      department: normalizeDepartment(data.department),
+      CGPA: cgpaVal,
+      cgpa: cgpaVal,
+    };
+    return request<StudentResponse>("/students/add", {
       method: "POST",
-      body: JSON.stringify(data),
-    }),
+      body: JSON.stringify(payload),
+    });
+  },
 
-  update: (data: StudentRequest) =>
-    request<StudentResponse>("/students/update", {
+  update: (data: StudentRequest) => {
+    const cgpaVal = data.CGPA ?? data.cgpa ?? 0;
+    const payload = {
+      ...data,
+      department: normalizeDepartment(data.department),
+      CGPA: cgpaVal,
+      cgpa: cgpaVal,
+    };
+    return request<StudentResponse>("/students/update", {
       method: "PUT",
-      body: JSON.stringify(data),
-    }),
+      body: JSON.stringify(payload),
+    });
+  },
 
   delete: (id: string) =>
     request<string>(`/students/delete/${id}`, { method: "DELETE" }),

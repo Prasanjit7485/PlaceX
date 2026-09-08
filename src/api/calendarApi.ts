@@ -1,6 +1,13 @@
 import request from "./client";
 import type { PlacementEventResponse } from "./types";
 
+function sanitizeTime(timeStr?: string): string | undefined {
+  if (!timeStr || !timeStr.trim()) return undefined;
+  const t = timeStr.trim();
+  if (t.length === 5) return `${t}:00`;
+  return t;
+}
+
 export const calendarApi = {
   getAll: (filters?: { year?: number; month?: number; status?: string }) => {
     const params = new URLSearchParams();
@@ -25,11 +32,17 @@ export const calendarApi = {
     endTime?: string;
     location?: string;
     description?: string;
-  }) =>
-    request<PlacementEventResponse>("/calendar/events/add", {
+  }) => {
+    const payload = {
+      ...data,
+      startTime: sanitizeTime(data.startTime),
+      endTime: sanitizeTime(data.endTime),
+    };
+    return request<PlacementEventResponse>("/calendar/events/add", {
       method: "POST",
-      body: JSON.stringify(data),
-    }),
+      body: JSON.stringify(payload),
+    });
+  },
 
   update: (
     id: number,
@@ -43,11 +56,17 @@ export const calendarApi = {
       location?: string;
       description?: string;
     }
-  ) =>
-    request<PlacementEventResponse>(`/calendar/events/update/${id}`, {
+  ) => {
+    const payload = {
+      ...data,
+      startTime: sanitizeTime(data.startTime),
+      endTime: sanitizeTime(data.endTime),
+    };
+    return request<PlacementEventResponse>(`/calendar/events/update/${id}`, {
       method: "PUT",
-      body: JSON.stringify(data),
-    }),
+      body: JSON.stringify(payload),
+    });
+  },
 
   
   cancel: (id: number) =>

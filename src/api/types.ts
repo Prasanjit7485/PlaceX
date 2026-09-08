@@ -22,6 +22,7 @@ export interface StudentRequest {
   activeBacklogs?: number;
   resumeUrl: string;
   year: number;
+  CGPA?: number;
   cgpa?: number;
 }
 export interface CompanyResponse {

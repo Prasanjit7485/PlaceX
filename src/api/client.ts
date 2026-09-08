@@ -19,8 +19,21 @@ async function request<T>(
 
   if (!response.ok) {
     const errorText = await response.text();
+    let errorMessage = errorText;
+    try {
+      const jsonErr = JSON.parse(errorText);
+      if (jsonErr && typeof jsonErr === "object") {
+        if (typeof jsonErr.message === "string" && jsonErr.message) {
+          errorMessage = jsonErr.message;
+        } else if (typeof jsonErr.error === "string" && jsonErr.error) {
+          errorMessage = jsonErr.error;
+        }
+      }
+    } catch {
+      // Not JSON, use errorText
+    }
     throw new Error(
-      errorText || `API request failed: ${response.status}`
+      errorMessage || `API request failed with status ${response.status}`
     );
   }
 
