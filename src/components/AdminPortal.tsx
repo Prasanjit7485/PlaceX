@@ -126,64 +126,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   jobPostingApi
     .getAllWithCompanyInfo()
     .then((apiDrives) => {
-      const mappedDrives: PlacementDrive[] =
-        apiDrives.map((drive) => ({
-          id: drive.id,
-
-          companyName: drive.companyName,
-          companyId: drive.companyId,
-
-          title: drive.title,
-          role: drive.title,
-
-          description: drive.description,
-          jobDesc: drive.description,
-
-          location: drive.location,
-
-          package: drive.package,
-          numericPackage: drive.numericPackage,
-
-          cgpaCutoff: drive.cgpaCutoff,
-          maxBacklogs: drive.maxBacklogs,
-          allowedBranches: drive.allowedBranches,
-
-          eligibleBatch: drive.eligibleBatch,
-          deadline: drive.deadline,
-
-          skillsRequired: drive.skillsRequired,
-
-          rounds: [],
-
-          status: drive.status,
-
-          registeredCount:
-            drive.registeredCount,
-
-          recruitmentType:
-            drive.recruitmentType,
-
-          sourceType:
-            drive.sourceType,
-
-          applyUrl:
-            drive.applyUrl,
-
-          source:
-            drive.source,
-
-          postedAt:
-            drive.postedAt,
-
-          jobType:
-            drive.jobType,
-
-          roleCategory:
-            drive.roleCategory,
-
-          scrapedDate:
-            drive.scrapedDate,
-        }));
 
       setRealDrives(apiDrives);
     })
