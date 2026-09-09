@@ -98,6 +98,6 @@ export const INITIAL_CALENDAR_EVENTS: CalendarEvent[] = placementEvents.map((pe)
   location: pe.venue,
   venue: pe.venue,
   description: pe.description,
-  status: "SCHEDULED",
+  status: "UPCOMING",
   branches: pe.branches,
 }));

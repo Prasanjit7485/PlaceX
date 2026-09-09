@@ -22,6 +22,7 @@ export interface StudentRequest {
   activeBacklogs?: number;
   resumeUrl: string;
   year: number;
+  CGPA?: number;
   cgpa?: number;
 }
 export interface CompanyResponse {
@@ -52,8 +53,9 @@ export interface JobPostingResponse {
   allowedBranches: string;
   eligibleBatch?: string;
   requiredSkills: string;
-  companyId: number;
-  location: string;
+  companyId?: number;
+  companyName?: string;
+  location?: string;
 }
 
 export interface JobPostingRequest {
@@ -96,7 +98,8 @@ export interface RecruiterResponse {
   name: string;
   email: string;
   companyName: string;
-  designation: string;
+  designation?: string;
+  industry?: string;
   recruiterStatus: RecruiterStatus;
 }
 export interface RecruiterRequest {
@@ -105,6 +108,7 @@ export interface RecruiterRequest {
   password: string;
   companyName: string;
   designation?: string;
+  industry?: string;
 }
 export type Role = "TPO" | "RECRUITER" | "STUDENT" | "ALUMNI";
 

@@ -18,9 +18,28 @@ async function request<T>(
   });
 
   if (!response.ok) {
+    if (response.status === 401) {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("token");
+        window.dispatchEvent(new Event("auth:unauthorized"));
+      }
+    }
     const errorText = await response.text();
+    let errorMessage = errorText;
+    try {
+      const jsonErr = JSON.parse(errorText);
+      if (jsonErr && typeof jsonErr === "object") {
+        if (typeof jsonErr.message === "string" && jsonErr.message) {
+          errorMessage = jsonErr.message;
+        } else if (typeof jsonErr.error === "string" && jsonErr.error) {
+          errorMessage = jsonErr.error;
+        }
+      }
+    } catch {
+      // Not JSON, use errorText
+    }
     throw new Error(
-      errorText || `API request failed: ${response.status}`
+      errorMessage || `API request failed with status ${response.status}`
     );
   }
 
@@ -28,7 +47,16 @@ async function request<T>(
     return undefined as T;
   }
 
-  return response.json();
+  const text = await response.text();
+  if (!text) {
+    return undefined as T;
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text as unknown as T;
+  }
 }
 
 export default request;

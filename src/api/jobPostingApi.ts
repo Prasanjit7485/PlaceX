@@ -36,6 +36,7 @@ export const jobPostingApi = {
     ]);
 
     const companyById = new Map(companies.map((c) => [c.id, c]));
+    const companyByName = new Map(companies.map((c) => [c.name.trim().toLowerCase(), c]));
 
     const registeredCountByPosting = new Map<number, number>();
     for (const app of applications) {
@@ -45,15 +46,20 @@ export const jobPostingApi = {
       );
     }
 
-    return postings.map((jp: { companyId: number; id: number; title: any; description: any; location: any; salary: any; eligibleCGPACutoff: any; allowedBacklogs: any; allowedBranches: string; deadline: any; requiredSkills: string; status: string; }): DriveWithCompany => {
-      const company = companyById.get(jp.companyId);
+    return postings.map((jp: any): DriveWithCompany => {
+      const company = (jp.companyId ? companyById.get(jp.companyId) : undefined) ||
+        (jp.companyName ? companyByName.get(String(jp.companyName).trim().toLowerCase()) : undefined);
+      
+      const compName = jp.companyName || company?.name || "Unknown Company";
+      const compId = jp.companyId || company?.id || 0;
+
       return {
         id: String(jp.id),
-        companyId: jp.companyId,
-        companyName: company?.name ?? "Unknown Company",
+        companyId: compId,
+        companyName: compName,
         title: jp.title,
         description: jp.description,
-        location: jp.location ?? '',
+        location: jp.location ?? company?.location ?? '',
         package: jp.salary ? `${jp.salary} LPA` : "N/A",
         numericPackage: jp.salary ?? 0,
         cgpaCutoff: jp.eligibleCGPACutoff ?? 0,
