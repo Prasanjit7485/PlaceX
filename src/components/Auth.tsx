@@ -27,7 +27,7 @@ import {
 
 import type { Student, Recruiter } from '../mockData';
 import type { Alumni } from '../mockAlumni';
-import type { AlumniRegistrationRequest } from '../api/alumniApi';
+import { alumniApi, type AlumniRegistrationRequest } from '../api/alumniApi';
 import { authApi } from '../api/authApi';
 import { studentApi } from '../api/studentApi';
 import { recruiterApi } from '../api/recruiterApi';
@@ -229,31 +229,28 @@ export const Auth: React.FC<AuthProps> = ({
         if (res?.token) {
           localStorage.setItem('token', res.token);
         }
-        const student = students.find(
+
+        const allStudents = await studentApi.getAll();
+        const realStudent = allStudents.find(
           (s) =>
-            (s.registrationNumber &&
-              s.registrationNumber.toLowerCase().trim() === studentRegNo.toLowerCase().trim()) ||
-            s.email.toLowerCase().trim() === studentRegNo.toLowerCase().trim()
-        );
-        onLogin('student', student?.id || 'std_1');
-      } catch {
-        const loginValue = studentRegNo.toLowerCase().trim();
-        const student = students.find(
-          (s) =>
-            (s.registrationNumber &&
-              s.registrationNumber.toLowerCase().trim() === loginValue) ||
-            s.email.toLowerCase().trim() === loginValue
+            s.email.toLowerCase().trim() === loginEmail.toLowerCase().trim() ||
+            (s.registrationNumber && s.registrationNumber.toLowerCase().trim() === studentRegNo.toLowerCase().trim()) ||
+            String(s.id).toLowerCase().trim() === studentRegNo.toLowerCase().trim()
         );
 
-        if (student && student.password === studentPassword) {
-          setError('');
-          onLogin('student', student.id);
+        if (realStudent) {
+          onLogin('student', String(realStudent.id));
         } else {
-          setError('Invalid credentials. Please check your registration number/email and password.');
+          localStorage.removeItem('token');
+          setError('Student profile record not found in system database.');
         }
+      } catch (err: any) {
+        localStorage.removeItem('token');
+        setError(err?.message || 'Invalid student credentials or login failed.');
       } finally {
         setIsSubmitting(false);
       }
+      return;
     }
 
     /* =====================================================
@@ -423,26 +420,21 @@ export const Auth: React.FC<AuthProps> = ({
         if (res?.token) {
           localStorage.setItem('token', res.token);
         }
-        const alumniAccount = alumni.find(
-          (a) => a.email.toLowerCase().trim() === loginEmail.toLowerCase()
-        );
-        onLogin('alumni', alumniAccount?.id || 'alm_1');
-      } catch {
-        const loginValue = studentRegNo.toLowerCase().trim();
-        const alumniAccount = alumni.find(
-          (a) =>
-            a.email.toLowerCase().trim() === loginValue &&
-            a.password === studentPassword
+
+        const allAlumni = await alumniApi.getAll();
+        const realAlumni = allAlumni.find(
+          (a) => a.email.toLowerCase().trim() === loginEmail.toLowerCase().trim()
         );
 
-        if (!alumniAccount) {
-          setError('Invalid alumni credentials.');
-        } else if (alumniAccount.alumniStatus !== 'APPROVED') {
-          setError('Your alumni account is still awaiting TPO approval.');
+        if (realAlumni) {
+          onLogin('alumni', String(realAlumni.id));
         } else {
-          setError('');
-          onLogin('alumni', alumniAccount.id);
+          localStorage.removeItem('token');
+          setError('Alumni profile record not found in system database.');
         }
+      } catch (err: any) {
+        localStorage.removeItem('token');
+        setError(err?.message || 'Invalid alumni credentials or login failed.');
       } finally {
         setIsSubmitting(false);
       }
@@ -628,28 +620,30 @@ try {
     if (authMode === 'login') {
       setIsSubmitting(true);
       try {
+        const loginEmail = recruiterEmail.trim();
         const res = await authApi.login({
-          email: recruiterEmail.trim(),
+          email: loginEmail,
           password: recruiterPassword,
           role: 'RECRUITER'
         });
         if (res?.token) {
           localStorage.setItem('token', res.token);
         }
-        const recruiter = recruiters.find(
-          (r) => r.email.toLowerCase().trim() === recruiterEmail.toLowerCase().trim()
+
+        const allRecruiters = await recruiterApi.getAll();
+        const realRecruiter = allRecruiters.find(
+          (r) => r.email.toLowerCase().trim() === loginEmail.toLowerCase().trim()
         );
-        onLogin('recruiter', recruiter?.id || 'rec_1');
-      } catch {
-        const recruiter = recruiters.find(
-          (r) => r.email.toLowerCase().trim() === recruiterEmail.toLowerCase().trim()
-        );
-        if (recruiter && recruiter.password === recruiterPassword) {
-          setError('');
-          onLogin('recruiter', recruiter.id);
+
+        if (realRecruiter) {
+          onLogin('recruiter', String(realRecruiter.id));
         } else {
-          setError('Invalid recruiter credentials. Please check work email/password.');
+          localStorage.removeItem('token');
+          setError('Recruiter profile record not found in system database.');
         }
+      } catch (err: any) {
+        localStorage.removeItem('token');
+        setError(err?.message || 'Invalid recruiter credentials or login failed.');
       } finally {
         setIsSubmitting(false);
       }
@@ -756,18 +750,13 @@ try {
       });
       if (res?.token) {
         localStorage.setItem('token', res.token);
-      }
-      onLogin('admin');
-    } catch {
-      if (
-        adminEmail.toLowerCase().trim() === 'admin@university.edu' &&
-        adminPassword === 'admin123'
-      ) {
-        setError('');
         onLogin('admin');
       } else {
-        setError('Invalid admin credentials. Use: admin@university.edu / admin123');
+        throw new Error('No token returned from backend.');
       }
+    } catch {
+      localStorage.removeItem('token');
+      setError('Unable to log in. No valid TPO account was found.');
     } finally {
       setIsSubmitting(false);
     }

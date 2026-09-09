@@ -18,6 +18,12 @@ async function request<T>(
   });
 
   if (!response.ok) {
+    if (response.status === 401) {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("token");
+        window.dispatchEvent(new Event("auth:unauthorized"));
+      }
+    }
     const errorText = await response.text();
     let errorMessage = errorText;
     try {

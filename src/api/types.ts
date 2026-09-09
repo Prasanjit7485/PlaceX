@@ -53,8 +53,9 @@ export interface JobPostingResponse {
   allowedBranches: string;
   eligibleBatch?: string;
   requiredSkills: string;
-  companyId: number;
-  location: string;
+  companyId?: number;
+  companyName?: string;
+  location?: string;
 }
 
 export interface JobPostingRequest {

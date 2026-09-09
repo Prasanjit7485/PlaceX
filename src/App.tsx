@@ -478,6 +478,21 @@ function AppContent() {
     );
   }, [recruiters]);
 
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      localStorage.removeItem('token');
+      localStorage.removeItem('placex_session');
+      setSession(null);
+      triggerToast('Session expired or unauthorized. Please log in again.', 'warning');
+      navigate('/auth?mode=login');
+    };
+
+    window.addEventListener('auth:unauthorized', handleUnauthorized);
+    return () => {
+      window.removeEventListener('auth:unauthorized', handleUnauthorized);
+    };
+  }, [navigate]);
+
 
   
 
@@ -625,66 +640,69 @@ function AppContent() {
   };
 
   const handleAlumniLogin = async (
-  requestData: {
-    email: string;
-    password: string;
-  }
-): Promise<void> => {
-  try {
-    const loggedInAlumni =
-      await alumniApi.login(requestData);
-
-    if (
-      loggedInAlumni.alumniStatus !== 'APPROVED'
-    ) {
-      throw new Error(
-        'Your alumni registration is pending TPO approval. Please wait until the TPO approves your account.'
-      );
+    requestData: {
+      email: string;
+      password: string;
     }
-
-    setAlumni((previousAlumni) => {
-      const exists = previousAlumni.some(
-        (item) => item.id === loggedInAlumni.id
-      );
-
-      if (exists) {
-        return previousAlumni.map((item) =>
-          item.id === loggedInAlumni.id
-            ? loggedInAlumni
-            : item
-        );
+  ): Promise<void> => {
+    try {
+      const res = await alumniApi.login(requestData);
+      if (res?.token) {
+        localStorage.setItem('token', res.token);
       }
 
-      return [
-        ...previousAlumni,
-        loggedInAlumni
-      ];
-    });
+      const allAlumni = await alumniApi.getAll();
+      const realAlumni = allAlumni.find(
+        (a) => a.email.toLowerCase().trim() === requestData.email.toLowerCase().trim()
+      );
 
-    setSession({
-      role: 'alumni',
-      alumniId: loggedInAlumni.id
-    });
+      if (!realAlumni) {
+        throw new Error('Alumni profile record not found in system database.');
+      }
 
-    triggerToast(
-      `Welcome back, ${loggedInAlumni.name}!`,
-      'success'
-    );
+      setAlumni((previousAlumni) => {
+        const exists = previousAlumni.some(
+          (item) => item.id === realAlumni.id
+        );
 
-    navigate('/alumni');
-  } catch (error) {
-    console.error(
-      'Failed to login alumni:',
-      error
-    );
+        if (exists) {
+          return previousAlumni.map((item) =>
+            item.id === realAlumni.id
+              ? realAlumni
+              : item
+          );
+        }
 
-    throw new Error(
-      error instanceof Error
-        ? error.message
-        : 'Unable to login alumni.'
-    );
-  }
-};
+        return [
+          ...previousAlumni,
+          realAlumni
+        ];
+      });
+
+      setSession({
+        role: 'alumni',
+        alumniId: String(realAlumni.id)
+      });
+
+      triggerToast(
+        `Welcome back, ${realAlumni.name}!`,
+        'success'
+      );
+
+      navigate('/alumni');
+    } catch (error) {
+      console.error(
+        'Failed to login alumni:',
+        error
+      );
+
+      throw new Error(
+        error instanceof Error
+          ? error.message
+          : 'Unable to login alumni.'
+      );
+    }
+  };
 
 
   /* =======================================================
@@ -692,6 +710,8 @@ function AppContent() {
   ======================================================= */
 
   const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('placex_session');
     setSession(null);
 
     triggerToast(

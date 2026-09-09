@@ -27,12 +27,12 @@ export const studentApi = {
 
   add: (data: StudentRequest) => {
     const cgpaVal = data.CGPA ?? data.cgpa ?? 0;
-    const payload = {
+    const payload: Record<string, any> = {
       ...data,
       department: normalizeDepartment(data.department),
       CGPA: cgpaVal,
-      cgpa: cgpaVal,
     };
+    delete payload.cgpa;
     return request<StudentResponse>("/students/add", {
       method: "POST",
       body: JSON.stringify(payload),
@@ -41,12 +41,12 @@ export const studentApi = {
 
   update: (data: StudentRequest) => {
     const cgpaVal = data.CGPA ?? data.cgpa ?? 0;
-    const payload = {
+    const payload: Record<string, any> = {
       ...data,
       department: normalizeDepartment(data.department),
       CGPA: cgpaVal,
-      cgpa: cgpaVal,
     };
+    delete payload.cgpa;
     return request<StudentResponse>("/students/update", {
       method: "PUT",
       body: JSON.stringify(payload),
