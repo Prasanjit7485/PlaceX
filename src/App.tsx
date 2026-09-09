@@ -41,7 +41,9 @@ import type {
 
 import { INITIAL_CALENDAR_EVENTS } from './mockCalendar';
 
-import type { CalendarEvent } from './api/types';
+import type {
+  CalendarEvent,
+  JobPostingRequest} from './api/types';
 
 import {
   alumniApi,
@@ -256,14 +258,7 @@ function AppContent() {
   ======================================================= */
 
   const [drives, setDrives] =
-    useState<PlacementDrive[]>(() => {
-      const saved =
-        localStorage.getItem('tpo_drives');
-
-      return saved
-        ? JSON.parse(saved)
-        : [];
-    });
+  useState<PlacementDrive[]>([]);
 
 
   /* =======================================================
@@ -351,31 +346,104 @@ function AppContent() {
         }
 
         if (drivesWithCompany.length > 0) {
-          const mappedDrives: PlacementDrive[] = drivesWithCompany.map((d) => ({
-            id: d.id,
-            companyName: d.companyName,
-            companyId: d.companyId,
-            companyLogo: 'https://images.unsplash.com/photo-1549923746-c502d488b3ea?auto=format&fit=crop&q=80&w=200',
-            role: d.title,
-            title: d.title,
-            description: d.description,
-            jobDesc: d.description || '',
-            package: d.package,
-            numericPackage: d.numericPackage,
-            cgpaCutoff: d.cgpaCutoff,
-            maxBacklogs: d.maxBacklogs,
-            allowedBranches: d.allowedBranches.length > 0 ? d.allowedBranches : ['Computer Science', 'Information Technology'],
-            eligibleBatch: d.eligibleBatch || '2025',
-            deadline: d.deadline,
-            location: d.location || 'Bangalore',
-            skillsRequired: d.skillsRequired.length > 0 ? d.skillsRequired : ['Java', 'Problem Solving'],
-            status: d.status,
-            registeredCount: d.registeredCount,
-            rounds: ['Online Assessment', 'Technical Interview', 'HR Interview']
-          }));
-          setDrives(mappedDrives);
-        }
+  const mappedDrives: PlacementDrive[] =
+    drivesWithCompany.map((d) => ({
+      id: d.id,
 
+      companyName:
+        d.companyName,
+
+      companyId:
+        d.companyId,
+
+      role:
+        d.roleCategory ||
+        d.title,
+
+      title:
+        d.title,
+
+      description:
+        d.description,
+
+      jobDesc:
+        d.description || '',
+
+      package:
+        d.package,
+
+      numericPackage:
+        d.numericPackage,
+
+      /*
+       * These remain null for
+       * OFF_CAMPUS.
+       */
+      cgpaCutoff:
+        d.cgpaCutoff,
+
+      maxBacklogs:
+        d.maxBacklogs,
+
+      allowedBranches:
+        d.allowedBranches,
+
+      eligibleBatch:
+        d.eligibleBatch,
+
+      deadline:
+        d.deadline ?? null,
+
+      location:
+        d.location,
+
+      skillsRequired:
+        d.skillsRequired,
+
+      status:
+        d.status,
+
+      registeredCount:
+        d.registeredCount,
+
+      rounds:
+        d.recruitmentType === 'OFF_CAMPUS'
+          ? []
+          : [
+              'Online Assessment',
+              'Technical Interview',
+              'HR Interview'
+            ],
+
+      recruitmentType:
+        d.recruitmentType === 'CAMPUS'
+          ? 'CAMPUS'
+          : d.recruitmentType,
+
+      sourceType:
+        d.sourceType,
+
+      applyUrl:
+        d.applyUrl,
+
+      source:
+        d.source,
+
+      postedAt:
+        d.postedAt,
+
+      jobType:
+        d.jobType,
+
+      roleCategory:
+        d.roleCategory,
+
+      scrapedDate:
+        d.scrapedDate,
+    }));
+
+  setDrives(mappedDrives);
+}
         if (recruitersList.length > 0) {
           const mappedRecruiters: Recruiter[] = recruitersList.map((r) => ({
             id: String(r.id),
@@ -918,39 +986,166 @@ function AppContent() {
      ADD PLACEMENT DRIVE
   ======================================================= */
 
-  const handleAddDrive = (
-    newDriveData: Omit<
-      PlacementDrive,
-      'id' | 'registeredCount'
-    >,
-    recruiterId?: string
-  ) => {
+  const handleAddDrive = async (
+  newDriveData: Omit<
+    PlacementDrive,
+    'id' | 'registeredCount'
+  >,
+  recruiterId?: string
+) => {
 
-    const newDrive: PlacementDrive = {
-      ...newDriveData,
-      id:
-        `drv_${Math.random()
-          .toString(36)
-          .substring(2, 11)}`,
-      registeredCount: 0,
-      recruiterId,
+  try {
+
+    const requestData: JobPostingRequest = {
+      title:
+        newDriveData.title ||
+        newDriveData.role,
+
+      description:
+        newDriveData.description ||
+        newDriveData.jobDesc,
+
+      location:
+        newDriveData.location,
+
+      eligibleCGPACutoff:
+        newDriveData.cgpaCutoff,
+
+      allowedBacklogs:
+        newDriveData.maxBacklogs,
+
+      allowedBranches:
+        newDriveData.allowedBranches
+          ?.join(', ') ?? null,
+
+      eligibleBatch:
+        newDriveData.eligibleBatch,
+
+      requiredSkills:
+        newDriveData.skillsRequired
+          ?.join(', ') ?? null,
+
+      salary:
+        newDriveData.numericPackage,
+
+      deadline:
+        newDriveData.deadline,
+
+      recruitmentType:
+        'CAMPUS',
+
+      sourceType:
+        recruiterId
+          ? 'RECRUITER'
+          : 'TPO',
     };
 
+    const createdDrive =
+      await jobPostingApi.createDrive(
+        newDriveData.companyName,
+        newDriveData.location || '',
+        undefined,
+        requestData
+      );
 
-    setDrives(
-      (previousDrives) => [
-        newDrive,
-        ...previousDrives,
-      ]
-    );
+    const mappedDrive: PlacementDrive = {
 
+      id:
+        createdDrive.id,
+
+      companyName:
+        createdDrive.companyName,
+
+      companyId:
+        createdDrive.companyId,
+
+      title:
+        createdDrive.title,
+
+      role:
+        createdDrive.title,
+
+      description:
+        createdDrive.description,
+
+      jobDesc:
+        createdDrive.description,
+
+      location:
+        createdDrive.location,
+
+      package:
+        createdDrive.package,
+
+      numericPackage:
+        createdDrive.numericPackage,
+
+      cgpaCutoff:
+        createdDrive.cgpaCutoff,
+
+      maxBacklogs:
+        createdDrive.maxBacklogs,
+
+      allowedBranches:
+        createdDrive.allowedBranches,
+
+      eligibleBatch:
+        createdDrive.eligibleBatch,
+
+      deadline:
+        createdDrive.deadline ?? null,
+
+      skillsRequired:
+        createdDrive.skillsRequired,
+
+      rounds:
+        newDriveData.rounds,
+
+      status:
+        createdDrive.status,
+
+      registeredCount:
+        createdDrive.registeredCount,
+
+      recruiterId,
+
+      recruitmentType:
+        createdDrive.recruitmentType,
+
+      sourceType:
+        createdDrive.sourceType,
+
+      applyUrl:
+        createdDrive.applyUrl,
+
+      source:
+        createdDrive.source,
+
+      postedAt:
+        createdDrive.postedAt,
+
+      jobType:
+        createdDrive.jobType,
+
+      roleCategory:
+        createdDrive.roleCategory,
+
+      scrapedDate:
+        createdDrive.scrapedDate,
+    };
+
+    setDrives((previous) => [
+      mappedDrive,
+      ...previous,
+    ]);
 
     /*
-     * Automatically create a calendar
-     * event when the drive has a deadline.
+     * Keep your existing calendar creation
+     * code here.
      */
 
     if (newDriveData.deadline) {
+
       const driveCalendarEvent: CalendarEvent = {
         id: Date.now(),
 
@@ -971,7 +1166,8 @@ function AppContent() {
         scheduledDate:
           newDriveData.deadline,
 
-        startTime: '23:59',
+        startTime:
+          '23:59',
 
         location:
           newDriveData.location ||
@@ -980,23 +1176,40 @@ function AppContent() {
         description:
           `Registration deadline for ${newDriveData.companyName} (${newDriveData.title}). Package: ${newDriveData.package}.`,
 
-        status: 'SCHEDULED',
+        status:
+          'SCHEDULED',
       };
 
       setCalendarEvents(
-        (previousEvents) => [
+        (previous) => [
           driveCalendarEvent,
-          ...previousEvents,
+          ...previous,
         ]
       );
     }
 
-
     triggerToast(
-      `Recruitment drive for ${newDrive.companyName} created successfully!`,
+      `Recruitment drive for ${newDriveData.companyName} created successfully!`,
       'success'
     );
-  };
+
+  } catch (error) {
+
+    console.error(
+      'Failed to create recruitment drive:',
+      error
+    );
+
+    triggerToast(
+      error instanceof Error
+        ? error.message
+        : 'Failed to create recruitment drive.',
+      'error'
+    );
+
+    throw error;
+  }
+};
 
 
   /* =======================================================

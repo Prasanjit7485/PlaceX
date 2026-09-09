@@ -68,16 +68,16 @@ export const Notification: React.FC<NotificationProps> = ({ toast, onClose }) =>
 
   return (
     <div
-      className={`fixed top-6 right-6 z-[9999] flex items-center gap-3 bg-slate-900/90 backdrop-blur-md border ${getBorderColor()} ${getGlow()} p-4 rounded-xl max-w-sm animate-slide-in`}
+      className={`fixed top-6 right-6 z-9999 flex items-center gap-3 bg-slate-900/90 backdrop-blur-md border ${getBorderColor()} ${getGlow()} p-4 rounded-xl max-w-sm animate-slide-in`}
       style={{
         animation: 'slideIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
       }}
     >
-      <div className="flex-shrink-0">{getIcon()}</div>
+      <div className="shrink-0">{getIcon()}</div>
       <div className="flex-1 text-sm text-slate-100 font-medium pr-2">{toast.message}</div>
       <button
         onClick={onClose}
-        className="flex-shrink-0 text-slate-400 hover:text-white transition-colors"
+        className="shrink-0 text-slate-400 hover:text-white transition-colors"
       >
         <X size={16} />
       </button>

@@ -123,11 +123,77 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   // Real Drives API & State
   const [realDrives, setRealDrives] = useState<DriveWithCompany[] | null>(null);
   useEffect(() => {
-    jobPostingApi
-      .getAllWithCompanyInfo()
-      .then(setRealDrives)
-      .catch((err) => console.error('Failed to load drives:', err));
-  }, []);
+  jobPostingApi
+    .getAllWithCompanyInfo()
+    .then((apiDrives) => {
+      const mappedDrives: PlacementDrive[] =
+        apiDrives.map((drive) => ({
+          id: drive.id,
+
+          companyName: drive.companyName,
+          companyId: drive.companyId,
+
+          title: drive.title,
+          role: drive.title,
+
+          description: drive.description,
+          jobDesc: drive.description,
+
+          location: drive.location,
+
+          package: drive.package,
+          numericPackage: drive.numericPackage,
+
+          cgpaCutoff: drive.cgpaCutoff,
+          maxBacklogs: drive.maxBacklogs,
+          allowedBranches: drive.allowedBranches,
+
+          eligibleBatch: drive.eligibleBatch,
+          deadline: drive.deadline,
+
+          skillsRequired: drive.skillsRequired,
+
+          rounds: [],
+
+          status: drive.status,
+
+          registeredCount:
+            drive.registeredCount,
+
+          recruitmentType:
+            drive.recruitmentType,
+
+          sourceType:
+            drive.sourceType,
+
+          applyUrl:
+            drive.applyUrl,
+
+          source:
+            drive.source,
+
+          postedAt:
+            drive.postedAt,
+
+          jobType:
+            drive.jobType,
+
+          roleCategory:
+            drive.roleCategory,
+
+          scrapedDate:
+            drive.scrapedDate,
+        }));
+
+      setRealDrives(apiDrives);
+    })
+    .catch((error) => {
+      console.error(
+        'Failed to load recruitment drives:',
+        error
+      );
+    });
+}, []);
 
   const effectiveDrives: (DriveWithCompany | PlacementDrive)[] = realDrives ?? drives;
 
@@ -215,7 +281,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       deadline,
       skillsRequired: skillsRequiredText ? skillsRequiredText.split(',').map((s) => s.trim()) : ['React', 'Data Structures'],
       status: 'OPEN',
-      registeredCount: 0
+      registeredCount: 0,
+      recruitmentType: 'CAMPUS'
     };
 
     try {
@@ -224,20 +291,31 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         companyLocation,
         companyWebsite || undefined,
         {
-          title: role,
-          description: jobDesc,
-          location: jobLocation,
-          eligibleCGPACutoff: Number(cgpaCutoff),
-          allowedBacklogs: Number(maxBacklogs),
-          allowedBranches: allowedBranches.join(', '),
-          requiredSkills: skillsRequiredText,
-          salary: Number(numericPkg),
-          deadline
-        }
+  title: role,
+  description: jobDesc,
+  location: jobLocation,
+
+  eligibleCGPACutoff: Number(cgpaCutoff),
+  allowedBacklogs: Number(maxBacklogs),
+  allowedBranches: allowedBranches.join(', '),
+  eligibleBatch: '2026 Batch',
+  requiredSkills: skillsRequiredText,
+
+  salary: Number(numericPkg),
+  deadline,
+
+  // TPO creates ONLY On-Campus drives
+  recruitmentType: 'CAMPUS',
+  sourceType: 'TPO'
+}
       );
       setRealDrives((prev) => (prev ? [newDrive, ...prev] : [newDrive]));
     } catch (err) {
-      console.warn('Backend unavailable, saving drive to local state:', err);
+      console.error(
+    'Failed to create recruitment drive:', err);
+    alert(
+    'Failed to create recruitment drive. Please check the backend connection.'
+  );
       setRealDrives((prev) => (prev ? [localDrive, ...prev] : [localDrive]));
     }
 

@@ -70,29 +70,53 @@ export interface Student {
 
 export interface PlacementDrive {
   id: string;
+
   companyName: string;
   title: string;
   description: string;
+
   location?: string;
+
   package: string;
   numericPackage: number;
-  cgpaCutoff: number;
-  maxBacklogs: number;
-  allowedBranches: string[];
-  eligibleBatch?: string;
-  deadline: string;
-  skillsRequired: string[];
+
+  // Campus-only eligibility fields
+  cgpaCutoff: number | null;
+  maxBacklogs: number | null;
+  allowedBranches: string[] | null;
+  eligibleBatch?: string | null;
+  deadline: string | null;
+  skillsRequired: string[] | null;
+
   rounds: string[];
+
   status: 'OPEN' | 'CLOSED';
+
   recruiterId?: string;
   companyId?: number;
+
   role: string;
   registeredCount?: number;
   jobDesc: string;
+
   active?: boolean;
   salary?: number;
-}
 
+  // Backend recruitment classification
+  // CAMPUS = On Campus
+  // OFF_CAMPUS = Scraped Off Campus
+  recruitmentType: 'CAMPUS' | 'OFF_CAMPUS';
+
+  sourceType?: 'RECRUITER' | 'TPO' | 'DATASET' | 'SCRAPER';
+
+  // Off-campus / scraper fields
+  applyUrl?: string | null;
+  source?: string | null;
+  postedAt?: string | null;
+  jobType?: string | null;
+  roleCategory?: string | null;
+  scrapedDate?: string | null;
+}
 export const INITIAL_DRIVES: PlacementDrive[] = [
   {
     id: 'drv_1',
@@ -112,7 +136,9 @@ export const INITIAL_DRIVES: PlacementDrive[] = [
     registeredCount: 42,
     recruiterId: 'rec_1',
     role: "",
-    jobDesc: ""
+    jobDesc: "",
+    recruitmentType: 'CAMPUS',
+sourceType: 'RECRUITER',
   },
 
   {
@@ -135,7 +161,9 @@ export const INITIAL_DRIVES: PlacementDrive[] = [
     description: "",
     salary: 0,
     status: "OPEN",
-    companyId: 0
+    companyId: 0,
+    recruitmentType: 'CAMPUS',
+sourceType: 'RECRUITER',
   },
   {
     id: 'drv_3',
@@ -156,7 +184,9 @@ export const INITIAL_DRIVES: PlacementDrive[] = [
     description: "",
     salary: 0,
     status: "OPEN",
-    companyId: 0
+    companyId: 0,
+    recruitmentType: 'CAMPUS',
+    sourceType: 'RECRUITER'
   },
   {
     id: 'drv_4',
@@ -177,7 +207,9 @@ export const INITIAL_DRIVES: PlacementDrive[] = [
     description: "",
     salary: 0,
     status: "OPEN",
-    companyId: 0
+    companyId: 0,
+    recruitmentType: 'CAMPUS',
+    sourceType: 'RECRUITER'
   },
   {
     id: 'drv_5',
@@ -198,7 +230,9 @@ export const INITIAL_DRIVES: PlacementDrive[] = [
     description: "",
     salary: 0,
     status: "OPEN",
-    companyId: 0
+    companyId: 0,
+    recruitmentType: 'CAMPUS',
+    sourceType: 'RECRUITER'
   },
   {
     id: 'drv_6',
@@ -219,7 +253,9 @@ export const INITIAL_DRIVES: PlacementDrive[] = [
     description: "",
     salary: 0,
     status: "CLOSED",
-    companyId: 0
+    companyId: 0,
+    recruitmentType: 'CAMPUS',
+    sourceType: 'RECRUITER'
   }
 ];
 

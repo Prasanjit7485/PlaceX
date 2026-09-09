@@ -1,4 +1,7 @@
-import React from 'react';
+import React, {
+  useMemo,
+  useState
+} from 'react';
 import { Briefcase, AlertCircle, Lock, Award } from 'lucide-react';
 import type { Student, PlacementDrive } from '../../mockData';
 
@@ -15,11 +18,108 @@ export const StudentDrivesView: React.FC<StudentDrivesViewProps> = ({
 }) => {
   const isPlaced = currentStudent.placementStatus === 'Placed';
 
+  const [
+  selectedRecruitmentType,
+  setSelectedRecruitmentType
+] = useState<
+  'ON_CAMPUS' | 'OFF_CAMPUS'
+>('ON_CAMPUS');
+
+const [
+  selectedRole,
+  setSelectedRole
+] = useState('ALL');
+
+const normalizedRecruitmentType = (
+  type:
+    | 'CAMPUS'
+    | 'ON_CAMPUS'
+    | 'OFF_CAMPUS'
+) => {
+  return type === 'CAMPUS'
+    ? 'ON_CAMPUS'
+    : type;
+};
+
+const availableRoles = useMemo(() => {
+
+  const roles = drives
+    .filter(
+      (drive) =>
+        normalizedRecruitmentType(
+          drive.recruitmentType
+        ) === selectedRecruitmentType
+    )
+    .map(
+      (drive) =>
+        drive.roleCategory ||
+        drive.role ||
+        drive.title
+    )
+    .filter(Boolean);
+
+  return [
+    'ALL',
+    ...Array.from(
+      new Set(roles)
+    ).sort()
+  ];
+
+}, [
+  drives,
+  selectedRecruitmentType
+]);
+
+const filteredDrives = useMemo(() => {
+
+  return drives.filter((drive) => {
+
+    const type =
+      normalizedRecruitmentType(
+        drive.recruitmentType
+      );
+
+    const matchesType =
+      type ===
+      selectedRecruitmentType;
+
+    const role =
+      drive.roleCategory ||
+      drive.role ||
+      drive.title;
+
+    const matchesRole =
+      selectedRole === 'ALL' ||
+      role === selectedRole;
+
+    return (
+      matchesType &&
+      matchesRole
+    );
+  });
+
+}, [
+  drives,
+  selectedRecruitmentType,
+  selectedRole
+]);
+
   // Core Smart Compatibility Math (EXACT UNTOUCHED ALGORITHM)
   const getCompatibility = (student: Student, drive: PlacementDrive) => {
-    const isGpaEligible = student.cgpa >= drive.cgpaCutoff;
-    const isBacklogEligible = student.backlogs <= drive.maxBacklogs;
-    const isBranchEligible = drive.allowedBranches.includes(student.department);
+
+    if (
+  drive.recruitmentType === 'OFF_CAMPUS'
+) {
+  return {
+    eligible: true,
+    score: 0,
+    matchingSkills: []
+  };
+}
+    const cgpaCutoff = drive.cgpaCutoff ?? 0;
+    const isGpaEligible = student.cgpa >= cgpaCutoff;
+    const isBacklogEligible = student.backlogs <= (drive.maxBacklogs ?? 0);
+    const isBranchEligible = (drive.allowedBranches ?? []).includes(student.department);
     const eligible = isGpaEligible && isBacklogEligible && isBranchEligible;
 
     if (!eligible) {
@@ -27,21 +127,21 @@ export const StudentDrivesView: React.FC<StudentDrivesViewProps> = ({
         eligible: false,
         score: 0,
         reasons: [
-          !isGpaEligible && `GPA cut-off is ${drive.cgpaCutoff} (yours: ${student.cgpa})`,
+          !isGpaEligible && `GPA cut-off is ${cgpaCutoff} (yours: ${student.cgpa})`,
           !isBacklogEligible && `Max backlogs allowed is ${drive.maxBacklogs} (yours: ${student.backlogs})`,
-          !isBranchEligible && `Eligible branches: ${drive.allowedBranches.join(', ')} (your branch: ${student.department})`
+          !isBranchEligible && `Eligible branches: ${(drive.allowedBranches ?? []).join(', ')} (your branch: ${student.department})`
         ].filter(Boolean) as string[]
       };
     }
 
-    const requiredSkills = drive.skillsRequired;
+    const requiredSkills = drive.skillsRequired ?? [];
     const studentSkills = student.skills;
     const matchingSkills = requiredSkills.filter((s) =>
       studentSkills.some((ss) => ss.toLowerCase() === s.toLowerCase())
     );
 
     const skillScore = requiredSkills.length > 0 ? (matchingSkills.length / requiredSkills.length) * 70 : 70;
-    const gpaBonus = Math.min(((student.cgpa - drive.cgpaCutoff) / (10 - drive.cgpaCutoff)) * 30, 30);
+    const gpaBonus = Math.min(((student.cgpa - cgpaCutoff) / (10 - cgpaCutoff)) * 30, 30);
     const overallScore = Math.min(Math.round(skillScore + Math.max(0, gpaBonus)), 100);
 
     return { eligible: true, score: overallScore, matchingSkills };
@@ -54,7 +154,10 @@ export const StudentDrivesView: React.FC<StudentDrivesViewProps> = ({
         <div>
           <h1 className="sp-page-title">
             <Briefcase size={28} className="text-blue-600" />
-            Active Campus Placement Drives ({drives.length})
+            {selectedRecruitmentType === 'ON_CAMPUS'
+  ? 'On-Campus Placement Drives'
+  : 'Off-Campus Jobs'}{' '}
+({filteredDrives.length})
           </h1>
           <p className="sp-page-subtitle">
             Real-time candidate compatibility match score calculated against corporate criteria.
@@ -69,9 +172,76 @@ export const StudentDrivesView: React.FC<StudentDrivesViewProps> = ({
         )}
       </div>
 
+      <div className="flex flex-wrap items-center gap-3">
+
+  <button
+    type="button"
+    onClick={() => {
+      setSelectedRecruitmentType(
+        'ON_CAMPUS'
+      );
+      setSelectedRole('ALL');
+    }}
+    className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${
+      selectedRecruitmentType === 'ON_CAMPUS'
+        ? 'bg-blue-600 text-white shadow-md'
+        : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
+    }`}
+  >
+    On Campus
+  </button>
+
+  <button
+    type="button"
+    onClick={() => {
+      setSelectedRecruitmentType(
+        'OFF_CAMPUS'
+      );
+      setSelectedRole('ALL');
+    }}
+    className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${
+      selectedRecruitmentType === 'OFF_CAMPUS'
+        ? 'bg-blue-600 text-white shadow-md'
+        : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
+    }`}
+  >
+    Off Campus
+  </button>
+
+  <div className="ml-auto flex items-center gap-2">
+
+    <label className="text-sm font-bold text-slate-600">
+      Role
+    </label>
+
+    <select
+      value={selectedRole}
+      onChange={(e) =>
+        setSelectedRole(
+          e.target.value
+        )
+      }
+      className="input-field min-w-55"
+    >
+      {availableRoles.map((role) => (
+        <option
+          key={role}
+          value={role}
+        >
+          {role === 'ALL'
+            ? 'All Roles'
+            : role}
+        </option>
+      ))}
+    </select>
+
+  </div>
+
+</div>
+
       {/* Drives Grid */}
       <div className="flex flex-col gap-6">
-        {drives.map((drive) => {
+        {filteredDrives.map((drive) => {
           const matchResult = getCompatibility(currentStudent, drive);
           const hasApplied = currentStudent.applications.some((a) => a.driveId === drive.id);
           const application = currentStudent.applications.find((a) => a.driveId === drive.id);
@@ -87,7 +257,7 @@ export const StudentDrivesView: React.FC<StudentDrivesViewProps> = ({
               <div className="flex-1 flex flex-col justify-between gap-4">
                 <div className="flex flex-col gap-3.5">
                   <div className="flex items-start gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white font-extrabold text-xl flex items-center justify-center shrink-0 shadow-md shadow-blue-500/20">
+                    <div className="w-14 h-14 rounded-2xl bg-linear-to-br from-blue-600 to-indigo-700 text-white font-extrabold text-xl flex items-center justify-center shrink-0 shadow-md shadow-blue-500/20">
                       {drive.companyName.charAt(0)}
                     </div>
 
@@ -122,50 +292,101 @@ export const StudentDrivesView: React.FC<StudentDrivesViewProps> = ({
                   </p>
                 </div>
 
-                {/* Cutoff specifications grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 bg-slate-50/90 p-4 rounded-xl border border-slate-200/80 text-xs">
-                  <div>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-                      Min CGPA
-                    </span>
-                    <span className="font-bold text-slate-900 text-xs">{drive.cgpaCutoff} CGPA</span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-                      Max Backlogs
-                    </span>
-                    <span className="font-bold text-slate-900 text-xs">{drive.maxBacklogs}</span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-                      Branches
-                    </span>
-                    <span
-                      className="font-bold text-slate-900 text-xs truncate block"
-                      title={
-                        Array.isArray(drive.allowedBranches)
-                          ? drive.allowedBranches.join(', ')
-                          : drive.allowedBranches || 'All'
-                      }
-                    >
-                      {Array.isArray(drive.allowedBranches)
-                        ? drive.allowedBranches.join(', ')
-                        : drive.allowedBranches || 'All'}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-                      Grad Batch
-                    </span>
-                    <span className="font-bold text-indigo-600 text-xs">
-                      {drive.eligibleBatch || '2026 Batch'}
-                    </span>
-                  </div>
-                </div>
+                {drive.recruitmentType !== 'OFF_CAMPUS' ? (
+  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 bg-slate-50/90 p-4 rounded-xl border border-slate-200/80 text-xs">
+
+    <div>
+      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+        Min CGPA
+      </span>
+
+      <span className="font-bold text-slate-900 text-xs">
+        {drive.cgpaCutoff} CGPA
+      </span>
+    </div>
+
+    <div>
+      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+        Max Backlogs
+      </span>
+
+      <span className="font-bold text-slate-900 text-xs">
+        {drive.maxBacklogs}
+      </span>
+    </div>
+
+    <div>
+      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+        Branches
+      </span>
+
+      <span className="font-bold text-slate-900 text-xs truncate block">
+        {drive.allowedBranches?.join(', ') || 'All'}
+      </span>
+    </div>
+
+    <div>
+      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+        Grad Batch
+      </span>
+
+      <span className="font-bold text-indigo-600 text-xs">
+        {drive.eligibleBatch || 'Not specified'}
+      </span>
+    </div>
+
+  </div>
+) : (
+  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 bg-slate-50/90 p-4 rounded-xl border border-slate-200/80 text-xs">
+
+    <div>
+      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+        Job Type
+      </span>
+
+      <span className="font-bold text-slate-900">
+        {drive.jobType || 'Not specified'}
+      </span>
+    </div>
+
+    <div>
+      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+        Source
+      </span>
+
+      <span className="font-bold text-slate-900">
+        {drive.source || 'External'}
+      </span>
+    </div>
+
+    <div>
+      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+        Category
+      </span>
+
+      <span className="font-bold text-slate-900">
+        {drive.roleCategory || drive.title}
+      </span>
+    </div>
+
+    <div>
+      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+        Posted
+      </span>
+
+      <span className="font-bold text-slate-900">
+        {drive.postedAt
+          ? new Date(drive.postedAt).toLocaleDateString()
+          : 'Recently'}
+      </span>
+    </div>
+
+  </div>
+)}
 
                 {/* Skills Pills */}
                 <div className="flex flex-wrap gap-2 pt-1">
-                  {drive.skillsRequired.map((skill) => {
+                  {(drive.skillsRequired ?? []).map((skill) => {
                     const hasSkill = currentStudent.skills.some(
                       (ss) => ss.toLowerCase() === skill.toLowerCase()
                     );
@@ -187,7 +408,7 @@ export const StudentDrivesView: React.FC<StudentDrivesViewProps> = ({
               </div>
 
               {/* Right Compatibility Panel & Apply Action */}
-              <div className="flex flex-col items-center justify-between p-5 rounded-2xl bg-slate-50/90 min-w-[210px] w-full md:w-auto border border-slate-200/80 text-center shrink-0 gap-4">
+              <div className="flex flex-col items-center justify-between p-5 rounded-2xl bg-slate-50/90 min-w-52.5 w-full md:w-auto border border-slate-200/80 text-center shrink-0 gap-4">
                 {matchResult.eligible ? (
                   <>
                     <div className="flex flex-col items-center py-2">
@@ -199,19 +420,34 @@ export const StudentDrivesView: React.FC<StudentDrivesViewProps> = ({
                       </span>
                     </div>
 
-                    <button
-                      disabled={hasApplied || isPlaced}
-                      onClick={() => onApply(drive.id)}
-                      className={`btn h-11 w-full rounded-xl text-xs font-bold shadow-md flex items-center justify-center gap-2 ${
-                        hasApplied
-                          ? 'btn-secondary bg-emerald-100 text-emerald-800 border-emerald-300 cursor-default'
-                          : isPlaced
-                          ? 'btn-secondary bg-slate-200 text-slate-500 cursor-not-allowed'
-                          : 'btn-primary shadow-blue-600/20'
-                      }`}
-                    >
-                      {hasApplied ? '✓ Applied' : isPlaced ? 'Placed' : 'Apply Now'}
-                    </button>
+                    {drive.recruitmentType === 'OFF_CAMPUS' ? (
+                      <button
+                        type="button"
+                        disabled={!drive.applyUrl}
+                        onClick={() => {
+                          if (drive.applyUrl) {
+                            window.open(
+                              drive.applyUrl,
+                              '_blank',
+                              'noopener,noreferrer'
+                            );
+                          }
+                        }}
+                        className="btn btn-primary h-11 w-full rounded-xl text-xs font-bold shadow-md"
+                      >
+                        {drive.applyUrl
+                          ? `Apply on ${drive.source || 'Job Portal'}`
+                          : 'Application Link Unavailable'}
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => onApply(drive.id)}
+                        className="btn btn-primary h-11 w-full rounded-xl text-xs font-bold shadow-md"
+                      >
+                        Apply Now
+                      </button>
+                    )}
                   </>
                 ) : (
                   <>

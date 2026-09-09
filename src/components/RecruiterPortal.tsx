@@ -127,7 +127,9 @@ export const RecruiterPortal: React.FC<RecruiterPortalProps> = ({
       title: role,
       description: jobDesc,
       status: 'OPEN',
-      companyId: 0
+      companyId: 0,
+      recruitmentType: 'CAMPUS',
+sourceType: 'RECRUITER',
     });
 
     setRole('');
@@ -162,7 +164,7 @@ export const RecruiterPortal: React.FC<RecruiterPortalProps> = ({
   return (
     <div className="rp-layout">
       {/* Mobile Top Bar */}
-      <div className="md:hidden sticky top-[64px] z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/90 px-4 py-3 flex items-center justify-between shadow-2xs">
+      <div className="md:hidden sticky top-16 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/90 px-4 py-3 flex items-center justify-between shadow-2xs">
         <button
           onClick={() => setIsMobileDrawerOpen(true)}
           className="px-4 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-extrabold text-xs border border-blue-200/80 transition-all cursor-pointer flex items-center gap-2 shadow-2xs active:scale-95"
