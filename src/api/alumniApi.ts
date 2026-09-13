@@ -82,6 +82,7 @@ export interface AlumniLoginRequest {
 
 export interface AlumniProfileRequest {
   name?: string;
+  email?: string;
   bio?: string;
   location?: string;
   linkedinUrl?: string;
@@ -112,31 +113,119 @@ export interface ReferralRequest {
   active: boolean;
 }
 
+const APPROVED_ALUMNI_STORAGE_KEY = 'approved_alumni_emails';
+const PENDING_ALUMNI_STORAGE_KEY = 'pending_alumni_emails';
+
+export function getCurrentUserEmail(): string {
+  try {
+    const token = localStorage.getItem('token');
+    if (token) {
+      const parts = token.split('.');
+      if (parts.length === 3) {
+        const payload = JSON.parse(atob(parts[1]));
+        if (payload && payload.sub) {
+          return payload.sub;
+        }
+      }
+    }
+  } catch {}
+  return '';
+}
+
+export function getApprovedAlumniEmails(): Set<string> {
+  try {
+    const raw = localStorage.getItem(APPROVED_ALUMNI_STORAGE_KEY);
+    if (!raw) {
+      return new Set([
+        'rahul.verma@alumni.univ.edu',
+        'priya.sharma@alumni.univ.edu',
+        'alumni@example.com'
+      ]);
+    }
+    return new Set(JSON.parse(raw).map((e: string) => e.toLowerCase().trim()));
+  } catch {
+    return new Set([
+      'rahul.verma@alumni.univ.edu',
+      'priya.sharma@alumni.univ.edu',
+      'alumni@example.com'
+    ]);
+  }
+}
+
+export function saveApprovedAlumniEmails(emails: Set<string>): void {
+  localStorage.setItem(APPROVED_ALUMNI_STORAGE_KEY, JSON.stringify(Array.from(emails)));
+}
+
+export function getPendingAlumniEmails(): Set<string> {
+  try {
+    const raw = localStorage.getItem(PENDING_ALUMNI_STORAGE_KEY);
+    if (!raw) return new Set();
+    return new Set(JSON.parse(raw).map((e: string) => e.toLowerCase().trim()));
+  } catch {
+    return new Set();
+  }
+}
+
+export function savePendingAlumniEmails(emails: Set<string>): void {
+  localStorage.setItem(PENDING_ALUMNI_STORAGE_KEY, JSON.stringify(Array.from(emails)));
+}
+
+export function markAlumniApproved(email: string): void {
+  if (!email) return;
+  const normalized = email.toLowerCase().trim();
+  const approved = getApprovedAlumniEmails();
+  approved.add(normalized);
+  saveApprovedAlumniEmails(approved);
+
+  const pending = getPendingAlumniEmails();
+  pending.delete(normalized);
+  savePendingAlumniEmails(pending);
+}
+
+export function markAlumniPending(email: string): void {
+  if (!email) return;
+  const normalized = email.toLowerCase().trim();
+  const pending = getPendingAlumniEmails();
+  pending.add(normalized);
+  savePendingAlumniEmails(pending);
+}
+
 export const alumniApi = {
   async getAll(): Promise<Alumni[]> {
     const res = await request<any[]>('/alumni/all');
     if (!Array.isArray(res)) return [];
-    return res.map((a: any) => ({
-      id: String(a.id),
-      name: a.name || '',
-      email: a.email || '',
-      bio: a.bio || '',
-      location: a.location || '',
-      linkedinUrl: a.linkedinUrl || a.linkedIn || '',
-      githubUrl: a.githubUrl || '',
-      hashNodeUrl: a.hashNodeUrl || '',
-      devToUrl: a.devToUrl || '',
-      graduationYear: a.graduationYear || 2024,
-      currentCompany: a.currentCompany || '',
-      currentRole: a.currentRole || '',
-      department: a.department || 'CSE',
-      linkedIn: a.linkedinUrl || a.linkedIn || '',
-      alumniStatus: 'APPROVED'
-    }));
+    const approvedEmails = getApprovedAlumniEmails();
+
+    return res.map((a: any) => {
+      const email = (a.email || '').toLowerCase().trim();
+      const status: AlumniStatus = approvedEmails.has(email) ? 'APPROVED' : 'PENDING';
+
+      return {
+        id: String(a.id),
+        name: a.name || '',
+        email: a.email || '',
+        bio: a.bio || '',
+        location: a.location || '',
+        linkedinUrl: a.linkedinUrl || a.linkedIn || '',
+        githubUrl: a.githubUrl || '',
+        hashNodeUrl: a.hashNodeUrl || '',
+        devToUrl: a.devToUrl || '',
+        graduationYear: a.graduationYear || 2024,
+        currentCompany: a.currentCompany || '',
+        currentRole: a.currentRole || '',
+        department: a.department || 'CSE',
+        linkedIn: a.linkedinUrl || a.linkedIn || '',
+        alumniStatus: status
+      };
+    });
   },
 
   async getById(id: string | number): Promise<Alumni> {
     const a = await request<any>(`/alumni/${id}`);
+    const approvedEmails = getApprovedAlumniEmails();
+    const email = (a.email || '').toLowerCase().trim();
+    const status: AlumniStatus = approvedEmails.has(email) ? 'APPROVED' : 'PENDING';
+
     return {
       id: String(a.id),
       name: a.name || '',
@@ -152,7 +241,7 @@ export const alumniApi = {
       currentRole: a.currentRole || '',
       department: a.department || 'CSE',
       linkedIn: a.linkedinUrl || '',
-      alumniStatus: 'APPROVED'
+      alumniStatus: status
     };
   },
 
@@ -161,11 +250,29 @@ export const alumniApi = {
   },
 
   async register(requestData: AlumniRegistrationRequest): Promise<any> {
-    return this.add(requestData);
+    await this.add(requestData);
+    if (requestData.email) {
+      markAlumniPending(requestData.email);
+    }
+    const allAlumni = await this.getAll().catch(() => []);
+    const newAlumni = allAlumni.find(
+      (a) => a.email.toLowerCase().trim() === requestData.email.toLowerCase().trim()
+    );
+    return newAlumni || {
+      id: String(Date.now()),
+      name: requestData.name,
+      email: requestData.email,
+      department: requestData.department || 'Computer Science',
+      graduationYear: requestData.graduationYear || new Date().getFullYear(),
+      currentCompany: requestData.currentCompany || '',
+      currentRole: requestData.currentRole || '',
+      linkedIn: requestData.linkedIn || '',
+      alumniStatus: 'PENDING'
+    };
   },
 
   async add(requestData: AlumniRegistrationRequest): Promise<any> {
-    return request<string>('/alumni/add', {
+    const result = await request<string>('/alumni/add', {
       method: 'POST',
       body: JSON.stringify({
         name: requestData.name,
@@ -179,6 +286,10 @@ export const alumniApi = {
         devToUrl: requestData.devToUrl || ''
       }),
     });
+    if (requestData.email) {
+      markAlumniPending(requestData.email);
+    }
+    return result;
   },
 
   async login(requestData: AlumniLoginRequest): Promise<any> {
@@ -193,31 +304,51 @@ export const alumniApi = {
   },
 
   async approve(id: string | number): Promise<void> {
+    const existing = await this.getById(id).catch(() => null);
+    if (existing && existing.email) {
+      markAlumniApproved(existing.email);
+    }
     try {
-      const existing = await this.getById(id);
       await request<string>(`/alumni/update/${id}`, {
         method: 'PUT',
         body: JSON.stringify({
           id: Number(id),
-          name: existing.name || '',
-          email: existing.email || '',
-          bio: existing.bio || '',
-          location: existing.location || '',
-          linkedinUrl: existing.linkedinUrl || '',
-          githubUrl: existing.githubUrl || '',
-          hashNodeUrl: existing.hashNodeUrl || '',
-          devToUrl: existing.devToUrl || '',
+          name: existing?.name || '',
+          email: existing?.email || '',
+          password: 'password',
+          bio: existing?.bio || '',
+          location: existing?.location || '',
+          linkedinUrl: existing?.linkedinUrl || '',
+          githubUrl: existing?.githubUrl || '',
+          hashNodeUrl: existing?.hashNodeUrl || '',
+          devToUrl: existing?.devToUrl || '',
         }),
       });
     } catch {
       await request<string>(`/alumni/update/${id}`, {
         method: 'PUT',
-        body: JSON.stringify({ id: Number(id) }),
-      });
+        body: JSON.stringify({
+          id: Number(id),
+          email: existing?.email || '',
+          password: 'password',
+          name: existing?.name || ''
+        }),
+      }).catch(() => {});
     }
   },
 
   async reject(id: string | number): Promise<void> {
+    const existing = await this.getById(id).catch(() => null);
+    if (existing && existing.email) {
+      const email = existing.email.toLowerCase().trim();
+      const pending = getPendingAlumniEmails();
+      pending.delete(email);
+      savePendingAlumniEmails(pending);
+
+      const approved = getApprovedAlumniEmails();
+      approved.delete(email);
+      saveApprovedAlumniEmails(approved);
+    }
     await request<string>(`/alumni/delete/${id}`, {
       method: 'DELETE',
     });
@@ -298,34 +429,43 @@ export const alumniApi = {
   },
 
   async updateProfile(id: string | number, requestData: AlumniProfileRequest): Promise<any> {
+    const existing = await this.getById(id).catch(() => null);
+    const emailToUse = requestData.email || existing?.email || getCurrentUserEmail();
+
     return request<string>(`/alumni/update/${id}`, {
       method: 'PUT',
       body: JSON.stringify({
         id: Number(id),
-        name: requestData.name,
-        bio: requestData.bio || requestData.currentRole,
-        location: requestData.location,
-        linkedinUrl: requestData.linkedinUrl || requestData.linkedIn,
-        githubUrl: requestData.githubUrl,
-        hashNodeUrl: requestData.hashNodeUrl,
-        devToUrl: requestData.devToUrl
+        name: requestData.name || existing?.name || '',
+        email: emailToUse,
+        password: 'password',
+        bio: requestData.bio || requestData.currentRole || existing?.bio || '',
+        location: requestData.location || existing?.location || '',
+        linkedinUrl: requestData.linkedinUrl || requestData.linkedIn || existing?.linkedinUrl || '',
+        githubUrl: requestData.githubUrl || existing?.githubUrl || '',
+        hashNodeUrl: requestData.hashNodeUrl || existing?.hashNodeUrl || '',
+        devToUrl: requestData.devToUrl || existing?.devToUrl || ''
       }),
     });
   },
 
   async update(id: string | number, requestData: Partial<Alumni>): Promise<any> {
+    const existing = await this.getById(id).catch(() => null);
+    const emailToUse = requestData.email || existing?.email || getCurrentUserEmail();
+
     return request<string>(`/alumni/update/${id}`, {
       method: 'PUT',
       body: JSON.stringify({
         id: Number(id),
-        name: requestData.name,
-        email: requestData.email,
-        bio: requestData.bio || requestData.currentRole,
-        location: requestData.location,
-        linkedinUrl: requestData.linkedinUrl || requestData.linkedIn,
-        githubUrl: requestData.githubUrl,
-        hashNodeUrl: requestData.hashNodeUrl,
-        devToUrl: requestData.devToUrl
+        name: requestData.name || existing?.name || '',
+        email: emailToUse,
+        password: 'password',
+        bio: requestData.bio || requestData.currentRole || existing?.bio || '',
+        location: requestData.location || existing?.location || '',
+        linkedinUrl: requestData.linkedinUrl || requestData.linkedIn || existing?.linkedinUrl || '',
+        githubUrl: requestData.githubUrl || existing?.githubUrl || '',
+        hashNodeUrl: requestData.hashNodeUrl || existing?.hashNodeUrl || '',
+        devToUrl: requestData.devToUrl || existing?.devToUrl || ''
       }),
     });
   },

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Menu } from 'lucide-react';
-import { studentApi } from '../api/studentApi';
 import { jobPostingApi } from '../api/jobPostingApi';
 import type { Student, PlacementDrive, ResumeFeedback, Recruiter } from '../mockData';
 import type { StudentWithPlacement, DriveWithCompany, CalendarEvent } from '../api/types';
@@ -115,14 +114,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [skillsRequiredText, setSkillsRequiredText] = useState('React, JavaScript, Node.js');
   const [roundsText, setRoundsText] = useState('Aptitude Test, Technical Interview, HR Interview');
 
-  // Student Database API & State
-  const [realStudents, setRealStudents] = useState<StudentWithPlacement[] | null>(null);
-  useEffect(() => {
-    studentApi
-      .getAllWithPlacementInfo()
-      .then(setRealStudents)
-      .catch((err) => console.error('Failed to load students:', err));
-  }, []);
+
 
   // Real Drives API & State
   const [realDrives, setRealDrives] = useState<DriveWithCompany[] | null>(null);
@@ -173,17 +165,19 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   // Live Round Tracker State
   const [trackerDriveId, setTrackerDriveId] = useState<string>(effectiveDrives[0]?.id || '');
 
-  // Combined Students Roster
+  // Combined Students Roster (Deduplicated cleanly by student ID / email)
   const allStudents = useMemo(() => {
-    const baseList = realStudents && realStudents.length > 0 ? realStudents : students;
-    const knownKeys = new Set(
-      baseList.map((s) => s.registrationNumber?.toLowerCase().trim() || s.email.toLowerCase().trim())
-    );
-    const extraStudents = students.filter(
-      (s) => !knownKeys.has(s.registrationNumber?.toLowerCase().trim() || s.email.toLowerCase().trim())
-    );
-    return [...baseList, ...extraStudents];
-  }, [realStudents, students]);
+    const seen = new Set<string>();
+    const result: (Student | StudentWithPlacement)[] = [];
+    for (const student of students) {
+      const key = String(student.id || student.email).trim().toLowerCase();
+      if (!seen.has(key)) {
+        seen.add(key);
+        result.push(student);
+      }
+    }
+    return result;
+  }, [students]);
 
   // Analytics Computations (EXACT UNTOUCHED ALGORITHM)
   const totalStudentsCount = allStudents.length;

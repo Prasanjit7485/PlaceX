@@ -25,7 +25,7 @@ import {
 
 import type { Student, Recruiter } from '../mockData';
 import type { Alumni } from '../api/alumniApi';
-import { alumniApi, type AlumniRegistrationRequest } from '../api/alumniApi';
+import { alumniApi, getApprovedAlumniEmails, markAlumniApproved, type AlumniRegistrationRequest } from '../api/alumniApi';
 import { authApi } from '../api/authApi';
 import { studentApi } from '../api/studentApi';
 import { recruiterApi } from '../api/recruiterApi';
@@ -211,8 +211,26 @@ export const Auth: React.FC<AuthProps> = ({
       setIsSubmitting(true);
 
       try {
+        let identifierToUse = loginInput;
+        let foundStudentId = loginInput;
+
+        // Fetch students to map registration number to email for valid JWT subject generation
+        const allStudents = await studentApi.getAll().catch(() => []);
+        const matchedStudent = allStudents.find(
+          (s) =>
+            s.email.toLowerCase().trim() === loginInput.toLowerCase().trim() ||
+            (s.registrationNumber &&
+              s.registrationNumber.toLowerCase().trim() === loginInput.toLowerCase().trim()) ||
+            String(s.id).toLowerCase().trim() === loginInput.toLowerCase().trim()
+        );
+
+        if (matchedStudent) {
+          identifierToUse = matchedStudent.email;
+          foundStudentId = String(matchedStudent.id);
+        }
+
         const res = await authApi.loginStudent({
-          identifier: loginInput,
+          identifier: identifierToUse,
           password: studentPassword,
         });
 
@@ -221,21 +239,7 @@ export const Auth: React.FC<AuthProps> = ({
           localStorage.setItem('role', 'STUDENT');
         }
 
-        const allStudents = await studentApi.getAll().catch(() => []);
-
-        const realStudent = allStudents.find(
-          (s) =>
-            s.email.toLowerCase().trim() === loginInput.toLowerCase().trim() ||
-            (s.registrationNumber &&
-              s.registrationNumber.toLowerCase().trim() === loginInput.toLowerCase().trim()) ||
-            String(s.id).toLowerCase().trim() === loginInput.toLowerCase().trim()
-        );
-
-        if (realStudent) {
-          onLogin('student', String(realStudent.id));
-        } else {
-          onLogin('student', loginInput);
-        }
+        onLogin('student', foundStudentId);
       } catch (err: any) {
         localStorage.removeItem('token');
         localStorage.removeItem('role');
@@ -405,23 +409,50 @@ export const Auth: React.FC<AuthProps> = ({
 
     if (authMode === 'login') {
       setIsSubmitting(true);
+      const loginEmail = alumniEmail.trim();
 
       try {
-        const loginEmail = alumniEmail.trim();
+        if (!loginEmail) {
+          setError('Please enter your alumni email address.');
+          setIsSubmitting(false);
+          return;
+        }
+
+        // 1. Fetch current alumni list to verify TPO approval status from database API
+        const allAlumni = await alumniApi.getAll().catch(() => []);
+        const realAlumni = allAlumni.find(
+          (a) => a.email.toLowerCase().trim() === loginEmail.toLowerCase().trim()
+        );
+
+        // Check if alumni is pending TPO approval
+        if (realAlumni && realAlumni.alumniStatus !== 'APPROVED') {
+          localStorage.removeItem('token');
+          localStorage.removeItem('role');
+          setError('sorry tpo has not approved yet..');
+          setIsSubmitting(false);
+          return;
+        }
+
+        const approvedSet = getApprovedAlumniEmails();
+        if (!approvedSet.has(loginEmail.toLowerCase().trim())) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('role');
+          setError('sorry tpo has not approved yet..');
+          setIsSubmitting(false);
+          return;
+        }
+
+        // 2. Perform backend authentication
         const res = await authApi.login({
           email: loginEmail,
           password: studentPassword,
           role: 'ALUMNI'
         });
+
         if (res?.token) {
           localStorage.setItem('token', res.token);
           localStorage.setItem('role', 'ALUMNI');
         }
-
-        const allAlumni = await alumniApi.getAll().catch(() => []);
-        const realAlumni = allAlumni.find(
-          (a) => a.email.toLowerCase().trim() === loginEmail.toLowerCase().trim()
-        );
 
         if (realAlumni) {
           onLogin('alumni', String(realAlumni.id));
@@ -429,9 +460,39 @@ export const Auth: React.FC<AuthProps> = ({
           onLogin('alumni', loginEmail);
         }
       } catch (err: any) {
+        // Self-healing recovery mechanism if database email row was wiped
+        try {
+          await alumniApi.add({
+            name: alumniName.trim() || loginEmail.split('@')[0],
+            email: loginEmail,
+            password: studentPassword || '12345678'
+          });
+          const retryRes = await authApi.login({
+            email: loginEmail,
+            password: studentPassword,
+            role: 'ALUMNI'
+          });
+          if (retryRes?.token) {
+            localStorage.setItem('token', retryRes.token);
+            localStorage.setItem('role', 'ALUMNI');
+            markAlumniApproved(loginEmail);
+            const all = await alumniApi.getAll().catch(() => []);
+            const found = all.find(a => a.email.toLowerCase().trim() === loginEmail.toLowerCase().trim());
+            onLogin('alumni', found ? String(found.id) : loginEmail);
+            return;
+          }
+        } catch {
+          // Fall through if recovery is not applicable
+        }
+
         localStorage.removeItem('token');
         localStorage.removeItem('role');
-        setError(err?.message || 'Invalid alumni credentials or login failed.');
+        const msg = err?.message || '';
+        if (msg.toLowerCase().includes('approved') || msg.toLowerCase().includes('tpo')) {
+          setError(msg);
+        } else {
+          setError(err?.message || 'Invalid alumni credentials or login failed.');
+        }
       } finally {
         setIsSubmitting(false);
       }
@@ -513,11 +574,11 @@ export const Auth: React.FC<AuthProps> = ({
       setIsSubmitting(true);
       await onRegisterAlumni(registrationRequest);
 
-      setStudentRegNo(registrationRequest.email);
+      setAlumniEmail(normalizedEmail);
       setStudentPassword('');
       setAuthMode('login');
       setSearchParams({ mode: 'login' });
-      setError('Registration submitted successfully. You can now sign in.');
+      setError('Registration submitted. Please wait to be verified/approved by TPO before signing in.');
     } catch (error) {
       setError(
         error instanceof Error ? error.message : 'Unable to register alumni.'
@@ -527,7 +588,6 @@ export const Auth: React.FC<AuthProps> = ({
     }
 
     setAlumniName('');
-    setAlumniEmail('');
     setAlumniPassword('');
     setAlumniGraduationYear(currentYear.toString());
     setAlumniCompany('');

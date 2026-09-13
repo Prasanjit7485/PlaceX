@@ -478,12 +478,22 @@ select.auth-input-field option {
   gap: 0.6rem;
 }
 
+.auth-error-banner.auth-success-banner {
+  background: #E6F4EA;
+  border-color: #137333;
+  color: #137333;
+}
+
 .auth-error-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
   background: #B64040;
   flex-shrink: 0;
+}
+
+.auth-error-banner.auth-success-banner .auth-error-dot {
+  background: #137333;
 }
 
 /* Primary Submit Button */

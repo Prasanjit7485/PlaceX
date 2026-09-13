@@ -36,13 +36,13 @@ export const StudentVisualizerView: React.FC<StudentVisualizerViewProps> = ({
       studentApi
         .getStageVisualizer(currentStudent.id)
         .then((data) => {
-          if (Array.isArray(data) && data.length > 0) {
+          if (Array.isArray(data)) {
             setRealVisualizer(data);
           }
         })
         .catch(() => {});
     }
-  }, [currentStudent?.id]);
+  }, [currentStudent?.id, selectedApplicationId]);
 
   const activeRealVisualizer = realVisualizer?.filter(
     (v) => String(v.jobPostingId) === selectedApplicationId

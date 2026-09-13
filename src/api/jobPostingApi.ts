@@ -196,10 +196,12 @@ export const jobPostingApi = {
         allowedBranches: jobData.allowedBranches || undefined,
         requiredSkills: jobData.requiredSkills || undefined,
         salary:
-          typeof jobData.salary === 'number' && !isNaN(jobData.salary)
+          typeof jobData.salary === 'number' && !isNaN(jobData.salary) && jobData.salary > 0
             ? jobData.salary
-            : undefined,
-        deadline: jobData.deadline,
+            : 6.0,
+        deadline: jobData.deadline && !isNaN(Date.parse(jobData.deadline))
+          ? jobData.deadline
+          : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         companyId: company.id,
       }
     );

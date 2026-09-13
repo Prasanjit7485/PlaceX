@@ -87,8 +87,8 @@ export const RecruiterDrivesView: React.FC<RecruiterDrivesViewProps> = ({
           onClick={() => setShowDriveForm(!showDriveForm)}
           className={`h-11 px-5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all self-start sm:self-center cursor-pointer ${
             showDriveForm
-              ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
-              : 'bg-sky-600 hover:bg-sky-700 text-white'
+              ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/90 shadow-2xs'
+              : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md hover:scale-[1.02] active:scale-[0.98]'
           }`}
         >
           {showDriveForm ? <X size={18} /> : <Plus size={18} />}
@@ -105,7 +105,7 @@ export const RecruiterDrivesView: React.FC<RecruiterDrivesViewProps> = ({
           <div className="flex items-center justify-between border-b border-slate-100 pb-4">
             <div>
               <h3 className="text-xl font-bold text-slate-900 font-display flex items-center gap-2">
-                <Building size={22} className="text-sky-600" />
+                <Building size={22} className="text-blue-600" />
                 Post New Campus Opportunity
               </h3>
               <p className="text-xs text-slate-500 mt-0.5">
@@ -115,9 +115,10 @@ export const RecruiterDrivesView: React.FC<RecruiterDrivesViewProps> = ({
             <button
               type="button"
               onClick={() => setShowDriveForm(false)}
-              className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+              className="px-3.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold border border-rose-200/80 transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs"
             >
-              <X size={20} />
+              <X size={16} />
+              <span>Close Editor</span>
             </button>
           </div>
 

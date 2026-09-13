@@ -44,7 +44,8 @@ import {
   type Alumni,
   type Blog,
   type Referral,
-  type AlumniRegistrationRequest
+  type AlumniRegistrationRequest,
+  type AlumniProfileRequest
 } from './api/alumniApi';
 
 import { studentApi } from './api/studentApi';
@@ -1420,13 +1421,13 @@ function AppContent() {
   const handleRegisterStudent = (
     newStudent: Student
   ) => {
-
-    setStudents(
-      (previousStudents) => [
-        ...previousStudents,
-        newStudent,
-      ]
-    );
+    setStudents((previousStudents) => {
+      const exists = previousStudents.some(
+        (s) => String(s.id).trim().toLowerCase() === String(newStudent.id).trim().toLowerCase()
+      );
+      if (exists) return previousStudents;
+      return [...previousStudents, newStudent];
+    });
 
     triggerToast(
       'Student registration successful! Please sign in.',
@@ -1462,35 +1463,35 @@ function AppContent() {
   ======================================================= */
 
   const handleRegisterAlumni = async (
-  requestData: AlumniRegistrationRequest
-): Promise<void> => {
-  try {
-    const createdAlumni = await alumniApi.register(
-      requestData
-    );
+    requestData: AlumniRegistrationRequest
+  ): Promise<void> => {
+    try {
+      const createdAlumni = await alumniApi.register(
+        requestData
+      );
 
-    setAlumni((previousAlumni) => [
-      ...previousAlumni,
-      createdAlumni
-    ]);
+      setAlumni((previousAlumni) => {
+        const filtered = previousAlumni.filter((a) => a.id !== createdAlumni.id);
+        return [...filtered, createdAlumni];
+      });
 
-    triggerToast(
-      'Alumni registered successfully. You can now sign in.',
-      'success'
-    );
-  } catch (error) {
-    console.error(
-      'Failed to register alumni:',
-      error
-    );
+      triggerToast(
+        'Registration submitted. Please wait to be verified/approved by TPO before signing in.',
+        'info'
+      );
+    } catch (error) {
+      console.error(
+        'Failed to register alumni:',
+        error
+      );
 
-    throw new Error(
-      error instanceof Error
-        ? error.message
-        : 'Unable to register alumni.'
-    );
-  }
-};
+      throw new Error(
+        error instanceof Error
+          ? error.message
+          : 'Unable to register alumni.'
+      );
+    }
+  };
 
   /* =======================================================
      APPROVE RECRUITER (TPO ONLY)
@@ -1731,6 +1732,34 @@ function AppContent() {
     );
   }
 };
+
+  /* =======================================================
+     UPDATE ALUMNI PROFILE
+  ======================================================= */
+
+  const handleUpdateAlumniProfile = async (
+    id: string | number,
+    requestData: AlumniProfileRequest
+  ): Promise<void> => {
+    try {
+      await alumniApi.updateProfile(id, requestData);
+      setAlumni((previousAlumni) =>
+        previousAlumni.map((a) =>
+          String(a.id) === String(id)
+            ? {
+                ...a,
+                ...requestData,
+                linkedinUrl: requestData.linkedinUrl || requestData.linkedIn || a.linkedinUrl
+              }
+            : a
+        )
+      );
+      triggerToast('Alumni profile updated successfully.', 'success');
+    } catch (error) {
+      console.error('Failed to update alumni profile:', error);
+      triggerToast('Failed to update alumni profile.', 'error');
+    }
+  };
   /* =======================================================
      ADD REFERRAL
   ======================================================= */
@@ -2479,27 +2508,19 @@ const handleDeleteReferral = async (
                 {loggedInAlumni ? (
 
                   <AlumniPortal
-
                     alumni={loggedInAlumni}
-
+                    allAlumni={alumni}
                     blogs={blogs}
-
                     referrals={referrals}
-
                     onLogout={handleLogout}
-
+                    onUpdateProfile={handleUpdateAlumniProfile}
                     onCreateBlog={handleAddBlog}
-
                     onUpdateBlog={handleUpdateBlog}
-
                     onDeleteBlog={handleDeleteBlog}
-
                     onCreateReferral={handleAddReferral}
-                       onUpdateReferral={handleUpdateReferral}
-                      onDeleteReferral={handleDeleteReferral}
- 
-
-                    />
+                    onUpdateReferral={handleUpdateReferral}
+                    onDeleteReferral={handleDeleteReferral}
+                  />
 
                 ) : (
 
