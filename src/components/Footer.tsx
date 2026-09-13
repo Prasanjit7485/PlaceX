@@ -1,6 +1,6 @@
 import React from 'react';
-import { GraduationCap } from 'lucide-react';
 import { ContributorAvatar, AvatarGroup, ContributorStyles } from './ContributorAvatar';
+import placedLogo from '../assets/placed_logo.png';
 
 const contributors = [
   {
@@ -33,8 +33,8 @@ export const Footer: React.FC = () => {
       <div className="site-footer-inner">
         <div className="site-footer-brand">
           <div className="flex items-center gap-2">
-            <GraduationCap size={20} className="text-blue-600" />
-            <span className="font-extrabold text-slate-900 text-base font-display">PlaceX</span>
+            <img src={placedLogo} alt="PlaceD Logo" className="w-6 h-6 object-contain rounded-md" />
+            <span className="font-extrabold text-slate-900 text-base font-display">PlaceD</span>
           </div>
           <p className="text-xs text-slate-600 max-w-xs leading-relaxed mt-2">
             A unified placement & training portal connecting students,
@@ -73,7 +73,7 @@ export const Footer: React.FC = () => {
       </div>
 
       <div className="site-footer-bottom text-slate-500 border-t border-slate-100 mt-6 pt-4 text-xs">
-        <span className="font-semibold text-slate-700">© {year} PlaceX. Built for campus placement teams.</span>
+        <span className="font-semibold text-slate-700">© {year} PlaceD. Built for campus placement teams.</span>
         <span className="hidden sm:inline text-blue-600 font-bold">v1.0 · University Placement Environment</span>
       </div>
     </footer>

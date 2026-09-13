@@ -54,7 +54,7 @@ Regards,
 Training & Placement Office`
       );
     } else if (selectedTemplate === "Thank You Email") {
-      setSubject(`Thank You for Partnering with PlaceX - ${companyName}`);
+      setSubject(`Thank You for Partnering with PlaceD - ${companyName}`);
       setBody(
 `Dear ${hrName},
 
@@ -71,7 +71,7 @@ Training & Placement Office`
       setBody(
 `Dear ${hrName},
 
-Greetings from PlaceX Training & Placement Cell.
+Greetings from PlaceD Training & Placement Cell.
 
 The Placement Office cordially invites ${companyName} to participate in our campus recruitment drive for the upcoming batch.
 
@@ -113,11 +113,11 @@ Training & Placement Office`
     };
 
     try {
-      const drafts = JSON.parse(localStorage.getItem("placeX-email-drafts") ?? "[]");
+      const drafts = JSON.parse(localStorage.getItem("placeD-email-drafts") ?? "[]");
       const nextDrafts = Array.isArray(drafts)
         ? [...drafts.filter((item) => item.recipient !== selected.email), draft]
         : [draft];
-      localStorage.setItem("placeX-email-drafts", JSON.stringify(nextDrafts));
+      localStorage.setItem("placeD-email-drafts", JSON.stringify(nextDrafts));
     } catch {
       // Storage may be unavailable; the composed email remains intact.
     }

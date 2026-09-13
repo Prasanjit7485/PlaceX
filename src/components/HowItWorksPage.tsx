@@ -157,7 +157,7 @@ export const HowItWorksPage: React.FC = () => {
         </motion.div>
 
         <motion.h1 variants={lineVariants} className="how-hero-title">
-          How PlaceX Works for Everyone
+          How PlaceD Works for Everyone
         </motion.h1>
 
         <motion.p variants={lineVariants} className="how-hero-subtitle">

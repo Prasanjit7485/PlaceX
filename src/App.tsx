@@ -23,6 +23,7 @@ import { HowItWorksPage } from './components/HowItWorksPage';
 import { Notification } from './components/Notification';
 import { NotificationBell } from './components/student/NotificationBell';
 import { RouteLoadingBar } from './components/RouteLoadingBar';
+import placedLogo from './assets/placed_logo.png';
 
 import type { ToastType } from './components/Notification';
 
@@ -53,7 +54,6 @@ import { calendarApi } from './api/calendarApi';
 import { applicationApi } from './api/applicationApi';
 
 import {
-  GraduationCap,
   LogOut,
   Shield,
   Building2,
@@ -440,7 +440,7 @@ function AppContent() {
     const handleUnauthorized = () => {
       localStorage.removeItem('token');
       localStorage.removeItem('role');
-      localStorage.removeItem('placex_session');
+      localStorage.removeItem('placed_session');
       setSession(null);
       triggerToast('Session expired or unauthorized. Please log in again.', 'warning');
       navigate('/auth?mode=login');
@@ -640,7 +640,7 @@ function AppContent() {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    localStorage.removeItem('placex_session');
+    localStorage.removeItem('placed_session');
     setSession(null);
 
     triggerToast(
@@ -1950,13 +1950,8 @@ const handleDeleteReferral = async (
 
       <header className="app-header">
 
-        <div className="app-logo">
-
-          <GraduationCap
-            className="logo-icon animate-pulse"
-            size={26}
-          />
-
+        <div className="app-logo flex items-center gap-2.5">
+          <img src={placedLogo} alt="PlaceD Logo" className="w-8 h-8 object-contain rounded-lg shrink-0" />
           <Link
             to="/"
             className="
@@ -1968,9 +1963,8 @@ const handleDeleteReferral = async (
               no-underline
             "
           >
-            PlaceX
+            PlaceD
           </Link>
-
         </div>
 
 

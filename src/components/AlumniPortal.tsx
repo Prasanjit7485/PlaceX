@@ -25,6 +25,7 @@ import type {
 } from '../api/alumniApi';
 
 import './AlumniPortal.css';
+import placedLogo from '../assets/placed_logo.png';
 
 type AlumniTab =
   | 'dashboard'
@@ -284,8 +285,9 @@ export const AlumniPortal: React.FC<AlumniPortalProps> = ({
           <Menu size={21} />
         </button>
 
-        <div className="alumni-mobile-title">
-          PlaceX Alumni
+        <div className="alumni-mobile-title flex items-center justify-center gap-2">
+          <img src={placedLogo} alt="PlaceD Logo" className="w-6 h-6 object-contain rounded-md shrink-0" />
+          <span>PlaceD Alumni</span>
         </div>
 
         <div className="alumni-avatar small">
@@ -301,13 +303,13 @@ export const AlumniPortal: React.FC<AlumniPortalProps> = ({
       >
         <div className="alumni-sidebar-header">
           <div className="alumni-brand">
-            <div className="alumni-brand-icon">
-              <Award size={22} />
+            <div className="alumni-brand-icon flex items-center justify-center p-0.5">
+              <img src={placedLogo} alt="PlaceD Logo" className="w-8 h-8 object-contain rounded-lg shrink-0" />
             </div>
 
             <div>
               <div className="alumni-brand-name">
-                PlaceX
+                PlaceD
               </div>
 
               <div className="alumni-brand-subtitle">
@@ -432,7 +434,7 @@ export const AlumniPortal: React.FC<AlumniPortalProps> = ({
 
                   <p>
                     Share your experience, help students,
-                    and strengthen the PlaceX alumni network.
+                    and strengthen the PlaceD alumni network.
                   </p>
                 </div>
 

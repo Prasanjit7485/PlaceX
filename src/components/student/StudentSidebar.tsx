@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   Menu,
   X,
-  GraduationCap,
   LayoutDashboard,
   Briefcase,
   Calendar as CalendarIcon,
@@ -13,6 +12,7 @@ import {
   User
 } from 'lucide-react';
 import type { Student } from '../../mockData';
+import placedLogo from '../../assets/placed_logo.png';
 
 export type StudentTabType =
   | 'dashboard'
@@ -70,15 +70,16 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
           isExpanded ? 'sp-sidebar-expanded' : 'sp-sidebar-collapsed'
         }`}
       >
+
         {/* Top Header: Toggle Button (☰) when Collapsed OR Close Button (✕) when Expanded */}
         <div className="sp-sidebar-header">
           {isExpanded ? (
             <div className="sp-brand-box">
-              <div className="sp-brand-icon-box">
-                <GraduationCap size={22} />
+              <div className="sp-brand-icon-box flex items-center justify-center p-0.5">
+                <img src={placedLogo} alt="PlaceD Logo" className="w-7 h-7 object-contain rounded-md shrink-0" />
               </div>
               <div className="flex flex-col min-w-0">
-                <span className="sp-brand-text leading-none">PlaceX Student</span>
+                <span className="sp-brand-text leading-none">PlaceD Student</span>
                 <span className="text-[10px] text-blue-600 font-bold uppercase tracking-wider mt-0.5">
                   Student Portal
                 </span>
