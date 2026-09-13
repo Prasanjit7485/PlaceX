@@ -162,8 +162,8 @@ export default function CalendarPage({
       {/* PAGE HEADER */}
       <div className="sp-page-header">
         <div>
-          <h1 className="sp-page-title">
-            <CalendarIcon size={28} className="text-blue-600" />
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-display tracking-tight flex items-center gap-3">
+            <CalendarIcon size={28} className="text-blue-600 shrink-0" />
             Placement Calendar
           </h1>
           <p className="sp-page-subtitle">

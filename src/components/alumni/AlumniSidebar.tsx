@@ -7,8 +7,7 @@ import {
   BookOpen,
   Briefcase,
   Users,
-  User,
-  LogOut
+  User
 } from 'lucide-react';
 import type { Alumni } from '../../api/alumniApi';
 import placedLogo from '../../assets/placed_logo.png';
@@ -26,17 +25,14 @@ interface AlumniSidebarProps {
   setActiveTab: (tab: AlumniTabType) => void;
   isExpanded: boolean;
   onToggleExpand: () => void;
-  alumni: Alumni;
-  onLogout: () => void;
+  alumni?: Alumni;
 }
 
 export const AlumniSidebar: React.FC<AlumniSidebarProps> = ({
   activeTab,
   setActiveTab,
   isExpanded,
-  onToggleExpand,
-  alumni,
-  onLogout
+  onToggleExpand
 }) => {
   const [hoveredItem, setHoveredItem] = useState<{ id: string; label: string; y: number } | null>(null);
 
@@ -60,15 +56,6 @@ export const AlumniSidebar: React.FC<AlumniSidebarProps> = ({
     setHoveredItem(null);
   };
 
-  const initials = alumni.name
-    ? alumni.name
-        .split(' ')
-        .map((n) => n[0])
-        .join('')
-        .slice(0, 2)
-        .toUpperCase()
-    : 'AL';
-
   return (
     <>
       <aside
@@ -85,7 +72,7 @@ export const AlumniSidebar: React.FC<AlumniSidebarProps> = ({
               </div>
               <div className="flex flex-col min-w-0">
                 <span className="alp-brand-text leading-none">PlaceD Alumni</span>
-                <span className="text-[10px] text-orange-600 font-bold uppercase tracking-wider mt-0.5">
+                <span className="text-[10px] text-blue-600 font-bold uppercase tracking-wider mt-0.5">
                   Alumni Portal
                 </span>
               </div>
@@ -117,23 +104,6 @@ export const AlumniSidebar: React.FC<AlumniSidebarProps> = ({
           )}
         </div>
 
-        {/* Profile Card (when expanded) */}
-        {isExpanded && (
-          <div className="alp-sidebar-profile-card">
-            <div className="alp-avatar-circle">
-              {initials}
-            </div>
-            <div className="flex flex-col min-w-0 flex-1">
-              <span className="text-xs font-bold text-slate-900 truncate" title={alumni.name}>
-                {alumni.name}
-              </span>
-              <span className="text-[10px] text-orange-600 font-bold uppercase tracking-wider truncate">
-                {alumni.currentCompany || alumni.department || 'Alumni Member'}
-              </span>
-            </div>
-          </div>
-        )}
-
         {/* Navigation Items */}
         <nav className="alp-sidebar-nav">
           {navItems.map((item) => {
@@ -155,19 +125,6 @@ export const AlumniSidebar: React.FC<AlumniSidebarProps> = ({
             );
           })}
         </nav>
-
-        {/* Footer Logout */}
-        <div className="alp-sidebar-footer">
-          <button
-            onClick={onLogout}
-            onMouseEnter={(e) => handleMouseEnter(e, 'logout-btn', 'Logout')}
-            onMouseLeave={handleMouseLeave}
-            className="alp-nav-item logout-btn"
-          >
-            <LogOut size={18} className="alp-nav-icon text-rose-500" />
-            {isExpanded && <span className="alp-nav-label text-rose-600 font-semibold">Sign Out</span>}
-          </button>
-        </div>
       </aside>
 
       {/* Floating Hover Tooltip (When Collapsed) */}

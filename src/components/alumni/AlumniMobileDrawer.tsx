@@ -68,7 +68,7 @@ export const AlumniMobileDrawer: React.FC<AlumniMobileDrawerProps> = ({
               <span className="font-extrabold text-slate-900 text-sm leading-none font-display">
                 PlaceD Alumni
               </span>
-              <span className="text-[10px] text-orange-600 font-extrabold uppercase tracking-wider mt-0.5">
+              <span className="text-[10px] text-blue-600 font-extrabold uppercase tracking-wider mt-0.5">
                 Alumni Portal
               </span>
             </div>
@@ -83,15 +83,15 @@ export const AlumniMobileDrawer: React.FC<AlumniMobileDrawerProps> = ({
         </div>
 
         {/* User Card */}
-        <div className="p-4 bg-orange-50/60 border-b border-orange-100 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-orange-600 to-amber-500 text-white font-extrabold text-xs flex items-center justify-center shrink-0 shadow-md shadow-orange-500/20">
+        <div className="p-4 bg-blue-50/60 border-b border-blue-100 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-extrabold text-xs flex items-center justify-center shrink-0 shadow-md shadow-blue-500/20">
             {initials}
           </div>
           <div className="flex flex-col min-w-0 flex-1">
             <span className="text-xs font-bold text-slate-900 truncate">
               {alumni.name}
             </span>
-            <span className="text-[10px] text-orange-600 font-extrabold uppercase tracking-wider truncate">
+            <span className="text-[10px] text-blue-600 font-extrabold uppercase tracking-wider truncate">
               {alumni.currentCompany || alumni.department || 'Alumni'}
             </span>
           </div>
@@ -112,8 +112,8 @@ export const AlumniMobileDrawer: React.FC<AlumniMobileDrawerProps> = ({
                 }}
                 className={`flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-bold transition-all ${
                   isActive
-                    ? 'bg-orange-500 text-white shadow-md shadow-orange-500/25'
-                    : 'text-slate-600 hover:bg-orange-50/80 hover:text-orange-700'
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25'
+                    : 'text-slate-600 hover:bg-blue-50/80 hover:text-blue-700'
                 }`}
               >
                 <Icon size={18} />

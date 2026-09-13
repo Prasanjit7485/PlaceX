@@ -641,6 +641,7 @@ function AppContent() {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('role');
     localStorage.removeItem('placed_session');
     setSession(null);
 
@@ -2110,22 +2111,21 @@ const handleDeleteReferral = async (
 
                   <span className="
                     text-[10px]
-                    text-amber-600
+                    text-blue-600
                     font-bold
                     uppercase
                     tracking-wider
                   ">
-                    {loggedInAlumni.currentCompany}
-                    {' '}Alumni
+                    {loggedInAlumni.currentCompany || 'Verified'} Alumni
                   </span>
 
                 </div>
 
                 <div className="
                   avatar
-                  bg-linear-to-br
-                  from-amber-400
-                  to-orange-600
+                  bg-gradient-to-br
+                  from-blue-600
+                  to-indigo-600
                 ">
                   <Award
                     size={16}

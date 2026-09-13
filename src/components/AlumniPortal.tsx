@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Award,
   BookOpen,
@@ -14,7 +15,9 @@ import {
   Globe,
   CheckCircle2,
   Save,
-  Loader2
+  Loader2,
+  UserCheck,
+  GitBranch
 } from 'lucide-react';
 
 import type {
@@ -27,9 +30,10 @@ import type {
 
 import { AlumniSidebar, type AlumniTabType } from './alumni/AlumniSidebar';
 import { AlumniMobileDrawer } from './alumni/AlumniMobileDrawer';
-import { AlumniHeader } from './alumni/AlumniHeader';
 import { AlumniDirectoryView } from './alumni/AlumniDirectoryView';
+import { Footer } from './Footer';
 import './AlumniPortal.css';
+import './student/StudentPortal.css';
 
 interface AlumniPortalProps {
   alumni: Alumni;
@@ -93,7 +97,38 @@ export const AlumniPortal: React.FC<AlumniPortalProps> = ({
   onUpdateReferral,
   onDeleteReferral
 }) => {
-  const [activeTab, setActiveTab] = useState<AlumniTabType>('dashboard');
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const getTabFromPath = (path: string): AlumniTabType => {
+    if (path.includes('/alumni/blogs')) return 'blogs';
+    if (path.includes('/alumni/my-blogs')) return 'myBlogs';
+    if (path.includes('/alumni/referrals') || path.includes('/alumni/referral')) return 'referral';
+    if (path.includes('/alumni/directory')) return 'directory';
+    if (path.includes('/alumni/settings') || path.includes('/alumni/profile')) return 'settings';
+    return 'dashboard';
+  };
+
+  const activeTab = getTabFromPath(location.pathname);
+
+  const setActiveTab = (tab: AlumniTabType) => {
+    const routeMap: Record<AlumniTabType, string> = {
+      dashboard: '/alumni/dashboard',
+      blogs: '/alumni/blogs',
+      myBlogs: '/alumni/my-blogs',
+      referral: '/alumni/referrals',
+      directory: '/alumni/directory',
+      settings: '/alumni/settings'
+    };
+    navigate(routeMap[tab]);
+  };
+
+  useEffect(() => {
+    if (location.pathname === '/alumni' || location.pathname === '/alumni/') {
+      navigate('/alumni/dashboard', { replace: true });
+    }
+  }, [location.pathname, navigate]);
+
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -276,7 +311,6 @@ export const AlumniPortal: React.FC<AlumniPortalProps> = ({
         isExpanded={isSidebarExpanded}
         onToggleExpand={() => setIsSidebarExpanded(!isSidebarExpanded)}
         alumni={alumni}
-        onLogout={onLogout}
       />
 
       {/* Mobile Navigation Drawer */}
@@ -291,115 +325,119 @@ export const AlumniPortal: React.FC<AlumniPortalProps> = ({
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-        {/* Top Header */}
-        <AlumniHeader
-          activeTab={activeTab}
-          onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
-          alumni={alumni}
-          onLogout={onLogout}
-        />
-
         {/* Content Container */}
-        <main className="p-4 sm:p-8 max-w-7xl w-full mx-auto flex-1">
+        <main className="sp-workspace">
           {/* DASHBOARD TAB */}
           {activeTab === 'dashboard' && (
-            <div className="flex flex-col gap-7 animate-fade-in pb-10">
-              {/* Welcome Hero Card */}
-              <div className="p-6 sm:p-8 rounded-3xl border border-orange-200/90 bg-gradient-to-r from-orange-600 via-amber-500 to-orange-500 text-white shadow-lg shadow-orange-500/15 flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
-                <div className="relative z-10">
-                  <span className="px-3 py-1 rounded-full bg-white/20 text-white text-xs font-extrabold tracking-wider uppercase backdrop-blur-md inline-flex items-center gap-1.5 shadow-2xs">
-                    <Sparkles size={13} /> Welcome Back
-                  </span>
-                  <h2 className="text-2xl sm:text-3xl font-extrabold font-display tracking-tight mt-3">
-                    Hello, {alumni.name ? alumni.name.split(' ')[0] : 'Alumni'} 👋
-                  </h2>
-                  <p className="text-orange-100 text-xs sm:text-sm max-w-xl leading-relaxed font-medium mt-1">
-                    Share your career insights, publish interview blogs, and offer referrals to help current students get placed.
-                  </p>
+            <div className="flex flex-col gap-6 animate-fade-in pb-10">
+              {/* Welcoming Hero Banner */}
+              <div className="glass-card p-6 sm:p-8 rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50/80 via-indigo-50/40 to-white shadow-xs flex flex-col gap-3">
+                <div className="flex items-center justify-between gap-4 flex-wrap">
+                  <div className="flex items-center gap-2.5">
+                    <span className="sp-badge sp-badge-success font-bold flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      Verified Alumni Network
+                    </span>
+                  </div>
+
+                  <div className="px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-800 text-xs font-bold flex items-center gap-1.5 shadow-2xs">
+                    <Award size={14} className="text-blue-600" />
+                    <span>{alumni.currentCompany || 'Placement Alumni'} — {alumni.currentRole || 'Senior Engineer'}</span>
+                  </div>
                 </div>
 
-                <div className="relative z-10 shrink-0 flex items-center gap-3">
-                  <button
-                    onClick={() => setActiveTab('blogs')}
-                    className="px-5 py-3 rounded-2xl bg-white text-orange-600 hover:bg-orange-50 active:scale-95 font-extrabold text-xs transition-all shadow-md flex items-center gap-2 cursor-pointer"
-                  >
-                    <FileText size={16} />
-                    Write Blog
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('referral')}
-                    className="px-5 py-3 rounded-2xl bg-orange-950/40 hover:bg-orange-950/60 active:scale-95 text-white font-extrabold text-xs transition-all shadow-md flex items-center gap-2 cursor-pointer border border-white/20"
-                  >
-                    <Briefcase size={16} />
-                    Offer Referral
-                  </button>
-                </div>
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-display tracking-tight mt-1">
+                  Welcome back, {alumni.name ? alumni.name.split(' ')[0] : 'Alumni'}! 👋
+                </h1>
 
-                <Award className="absolute -right-6 -bottom-6 text-white/10 w-48 h-48 pointer-events-none" />
+                <p className="text-slate-600 text-sm max-w-3xl leading-relaxed">
+                  Share your career insights, publish technical & interview blogs, post candidate referral openings, and mentor current campus students.
+                </p>
               </div>
 
-              {/* KPI Metrics */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                <div className="p-6 rounded-3xl bg-white border border-slate-200/90 shadow-2xs flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center shrink-0 border border-orange-100">
-                    <BookOpen size={22} />
-                  </div>
-                  <div>
-                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">My Blogs Posted</span>
-                    <h3 className="text-2xl font-black text-slate-900 font-display mt-0.5">{myBlogs.length}</h3>
-                  </div>
-                </div>
-
-                <div className="p-6 rounded-3xl bg-white border border-slate-200/90 shadow-2xs flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 border border-amber-100">
-                    <Briefcase size={22} />
-                  </div>
-                  <div>
-                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Referrals Offered</span>
-                    <h3 className="text-2xl font-black text-slate-900 font-display mt-0.5">{myReferrals.length}</h3>
-                  </div>
-                </div>
-
-                <div className="p-6 rounded-3xl bg-white border border-slate-200/90 shadow-2xs flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100">
-                    <Users size={22} />
-                  </div>
-                  <div>
-                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Network Members</span>
-                    <h3 className="text-2xl font-black text-slate-900 font-display mt-0.5">{allAlumni.length || publishedBlogs.length || 1}</h3>
-                  </div>
-                </div>
-              </div>
-
-              {/* Two Column Section */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-7">
-                {/* Recent Activity */}
-                <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200/90 shadow-2xs flex flex-col gap-5">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                    <div>
-                      <h3 className="font-extrabold text-slate-900 text-base sm:text-lg font-display">Recent Activity</h3>
-                      <p className="text-xs text-slate-500 font-medium">Your latest published articles and referral updates</p>
+              {/* KPI Metric Grid */}
+              <div className="sp-kpi-grid">
+                <div className="sp-kpi-card" style={{ '--kpi-accent': '#2563EB' } as React.CSSProperties}>
+                  <div className="sp-kpi-header">
+                    <span className="sp-kpi-label">Published Blogs</span>
+                    <div className="sp-kpi-icon bg-blue-50 text-blue-600">
+                      <BookOpen size={22} />
                     </div>
+                  </div>
+                  <div className="sp-kpi-value">{myBlogs.length}</div>
+                  <p className="text-xs text-slate-500 mt-2 font-medium">Articles & Interview Guides</p>
+                </div>
+
+                <div className="sp-kpi-card" style={{ '--kpi-accent': '#4F46E5' } as React.CSSProperties}>
+                  <div className="sp-kpi-header">
+                    <span className="sp-kpi-label">Referrals Offered</span>
+                    <div className="sp-kpi-icon bg-indigo-50 text-indigo-600">
+                      <Briefcase size={22} />
+                    </div>
+                  </div>
+                  <div className="sp-kpi-value">{myReferrals.length}</div>
+                  <p className="text-xs text-slate-500 mt-2 font-medium">Active Job Opening Posts</p>
+                </div>
+
+                <div className="sp-kpi-card" style={{ '--kpi-accent': '#10B981' } as React.CSSProperties}>
+                  <div className="sp-kpi-header">
+                    <span className="sp-kpi-label">Network Alumni</span>
+                    <div className="sp-kpi-icon bg-emerald-50 text-emerald-600">
+                      <Users size={22} />
+                    </div>
+                  </div>
+                  <div className="sp-kpi-value">{allAlumni.length || publishedBlogs.length || 1}</div>
+                  <p className="text-xs text-slate-500 mt-2 font-medium">Verified Members</p>
+                </div>
+
+                <div className="sp-kpi-card" style={{ '--kpi-accent': '#F59E0B' } as React.CSSProperties}>
+                  <div className="sp-kpi-header">
+                    <span className="sp-kpi-label">Account Status</span>
+                    <div className="sp-kpi-icon bg-amber-50 text-amber-600">
+                      <UserCheck size={22} />
+                    </div>
+                  </div>
+                  <div className="sp-kpi-value text-lg font-bold text-emerald-700">TPO Verified</div>
+                  <p className="text-xs text-slate-500 mt-2 font-medium">Alumni Portal Access</p>
+                </div>
+              </div>
+
+              {/* Main 3-Column Grid Layout */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Left 2 Cols: Recent Activity Feed */}
+                <div className="lg:col-span-2 glass-card p-6 sm:p-7 rounded-2xl border border-slate-200 bg-white shadow-xs flex flex-col gap-4">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <h3 className="font-bold text-slate-900 font-display text-base flex items-center gap-2">
+                      <BookOpen size={20} className="text-blue-600" />
+                      Recent Published Contributions
+                    </h3>
+                    <button
+                      onClick={() => setActiveTab('myBlogs')}
+                      className="text-xs text-blue-600 font-bold hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      View All Posts
+                    </button>
                   </div>
 
                   {myBlogs.length === 0 && myReferrals.length === 0 ? (
                     <div className="text-center py-12 text-slate-400">
-                      <BookOpen size={32} className="mx-auto mb-2 text-slate-300" />
-                      <p className="text-xs font-bold">You haven't posted any blogs or referrals yet.</p>
+                      <BookOpen size={44} className="mx-auto opacity-30 mb-2" />
+                      <p className="text-sm font-bold text-slate-700 font-display">No articles or referrals posted yet.</p>
+                      <p className="text-xs text-slate-500 mt-1 font-medium">Publish your first blog or referral opportunity below.</p>
                     </div>
                   ) : (
-                    <div className="flex flex-col gap-3">
+                    <div className="flex flex-col divide-y divide-slate-100">
                       {[
                         ...myBlogs.map((b) => ({
                           id: b.id,
                           title: b.title,
-                          type: 'Blog Post',
+                          type: 'Blog Article',
                           date: b.postedDate
                         })),
                         ...myReferrals.map((r) => ({
                           id: r.id,
                           title: `${r.companyName} — ${r.role}`,
-                          type: 'Referral Opportunity',
+                          type: 'Referral Posting',
                           date: r.postedDate
                         }))
                       ]
@@ -407,16 +445,18 @@ export const AlumniPortal: React.FC<AlumniPortalProps> = ({
                         .map((act) => (
                           <div
                             key={act.id}
-                            className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between gap-3"
+                            className="py-3.5 px-2 flex items-center justify-between gap-3 hover:bg-slate-50 rounded-xl transition-colors"
                           >
                             <div className="flex items-center gap-3 min-w-0">
-                              <div className="w-2.5 h-2.5 rounded-full bg-orange-500 shrink-0" />
+                              <div className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shrink-0 font-bold">
+                                {act.type === 'Blog Article' ? <FileText size={16} /> : <Briefcase size={16} />}
+                              </div>
                               <div className="flex flex-col min-w-0">
-                                <span className="text-xs font-extrabold text-slate-900 truncate">{act.title}</span>
-                                <span className="text-[10px] text-slate-500 font-medium">{act.type} · {act.date}</span>
+                                <span className="text-xs font-bold text-slate-900 truncate">{act.title}</span>
+                                <span className="text-[11px] text-slate-500 font-medium">{act.type} · {act.date}</span>
                               </div>
                             </div>
-                            <span className="px-2.5 py-1 rounded-lg bg-orange-100/80 text-orange-800 text-[10px] font-extrabold shrink-0">
+                            <span className="sp-badge sp-badge-success text-[10px] shrink-0">
                               Active
                             </span>
                           </div>
@@ -425,55 +465,55 @@ export const AlumniPortal: React.FC<AlumniPortalProps> = ({
                   )}
                 </div>
 
-                {/* Quick Actions & Profile Overview */}
-                <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200/90 shadow-2xs flex flex-col gap-5">
-                  <div className="border-b border-slate-100 pb-4">
-                    <h3 className="font-extrabold text-slate-900 text-base sm:text-lg font-display">Alumni Quick Actions</h3>
-                    <p className="text-xs text-slate-500 font-medium">Contribute insights or update your profile details</p>
-                  </div>
+                {/* Right 1 Col: Creator Quick Actions */}
+                <div className="glass-card p-6 sm:p-7 rounded-2xl border border-slate-200 bg-white shadow-xs flex flex-col gap-5">
+                  <h3 className="font-bold text-slate-900 font-display text-base border-b border-slate-100 pb-3 flex items-center gap-2">
+                    <Sparkles size={18} className="text-blue-600" />
+                    Quick Actions
+                  </h3>
 
                   <div className="flex flex-col gap-3">
                     <button
                       onClick={() => setActiveTab('blogs')}
-                      className="p-4 rounded-2xl bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200/80 hover:border-orange-300 transition-all flex items-center justify-between text-left group cursor-pointer"
+                      className="p-4 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/80 hover:border-blue-300 transition-all flex items-center justify-between text-left group cursor-pointer"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-orange-500 text-white flex items-center justify-center font-bold shadow-md shadow-orange-500/20">
+                        <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold shadow-md shadow-blue-500/20">
                           <FileText size={18} />
                         </div>
                         <div>
-                          <h4 className="text-xs font-extrabold text-slate-900 group-hover:text-orange-600 transition-colors">Write Career Experience Blog</h4>
-                          <p className="text-[11px] text-slate-500 font-medium">Help students prepare for placement interviews</p>
+                          <h4 className="text-xs font-extrabold text-slate-900 group-hover:text-blue-600 transition-colors">Write Career Experience Blog</h4>
+                          <p className="text-[11px] text-slate-500 font-medium">Guide students through rounds & prep</p>
                         </div>
                       </div>
                     </button>
 
                     <button
                       onClick={() => setActiveTab('referral')}
-                      className="p-4 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/80 hover:border-amber-300 transition-all flex items-center justify-between text-left group cursor-pointer"
+                      className="p-4 rounded-xl bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200/80 hover:border-indigo-300 transition-all flex items-center justify-between text-left group cursor-pointer"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold shadow-md shadow-amber-500/20">
+                        <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold shadow-md shadow-indigo-500/20">
                           <Briefcase size={18} />
                         </div>
                         <div>
-                          <h4 className="text-xs font-extrabold text-slate-900 group-hover:text-amber-600 transition-colors">Post Referral Opportunity</h4>
-                          <p className="text-[11px] text-slate-500 font-medium">Share hiring drives from your current organization</p>
+                          <h4 className="text-xs font-extrabold text-slate-900 group-hover:text-indigo-600 transition-colors">Post Referral Opportunity</h4>
+                          <p className="text-[11px] text-slate-500 font-medium">Share job roles from your company</p>
                         </div>
                       </div>
                     </button>
 
                     <button
                       onClick={() => setActiveTab('settings')}
-                      className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 hover:border-orange-300 transition-all flex items-center justify-between text-left group cursor-pointer"
+                      className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 hover:border-blue-300 transition-all flex items-center justify-between text-left group cursor-pointer"
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-slate-800 text-white flex items-center justify-center font-bold">
                           <Edit3 size={18} />
                         </div>
                         <div>
-                          <h4 className="text-xs font-extrabold text-slate-900 group-hover:text-orange-600 transition-colors">Update Profile & Developer Links</h4>
-                          <p className="text-[11px] text-slate-500 font-medium">Keep your company, role, GitHub & LinkedIn updated</p>
+                          <h4 className="text-xs font-extrabold text-slate-900 group-hover:text-blue-600 transition-colors">Update Profile & Links</h4>
+                          <p className="text-[11px] text-slate-500 font-medium">Keep company, role, & GitHub updated</p>
                         </div>
                       </div>
                     </button>
@@ -485,69 +525,76 @@ export const AlumniPortal: React.FC<AlumniPortalProps> = ({
 
           {/* WRITE BLOG TAB */}
           {activeTab === 'blogs' && (
-            <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200/90 shadow-2xs flex flex-col gap-6 animate-fade-in pb-10">
-              <div className="border-b border-slate-100 pb-4 flex items-center justify-between">
+            <div className="flex flex-col gap-6 animate-fade-in pb-10">
+              <div className="sp-page-header">
                 <div>
-                  <h3 className="font-extrabold text-slate-900 font-display text-lg">
-                    {editingBlog ? 'Edit Blog Article' : 'Compose New Blog Article'}
-                  </h3>
-                  <p className="text-xs text-slate-500 font-medium mt-0.5">
-                    Share your interview experiences, technical advice, or career journey with current campus students.
+                  <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-display tracking-tight flex items-center gap-3">
+                    <FileText size={28} className="text-blue-600 shrink-0" />
+                    {editingBlog ? 'Edit Blog Article' : 'Compose & Publish Alumni Experience Blog'}
+                  </h1>
+                  <p className="sp-page-subtitle">
+                    Share your interview experience, technical prep advice, or career journey to guide campus students.
                   </p>
                 </div>
               </div>
 
-              <form onSubmit={(e) => handleBlogSubmit(e, blogForm.published)} className="flex flex-col gap-5">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-extrabold text-slate-700">Blog Article Title *</label>
-                  <input
-                    value={blogForm.title}
-                    onChange={(e) => setBlogForm({ ...blogForm, title: e.target.value })}
-                    placeholder="e.g. My Google Software Engineer Interview Experience & Prep Strategy"
-                    required
-                    className="w-full border border-slate-200 rounded-xl px-4 py-3 text-xs sm:text-sm outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 transition-all"
-                  />
-                </div>
+              <form onSubmit={(e) => handleBlogSubmit(e, blogForm.published)} className="sp-card flex flex-col gap-6 p-6 sm:p-7">
+                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider font-display border-b border-slate-100 pb-3">
+                  Article Details & Content
+                </h3>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-extrabold text-slate-700">Category *</label>
-                  <div className="relative">
-                    <select
-                      value={blogForm.category}
-                      onChange={(e) => setBlogForm({ ...blogForm, category: e.target.value as BlogCategory })}
-                      className="w-full border border-slate-200 rounded-xl px-4 py-3 text-xs sm:text-sm outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 appearance-none bg-white transition-all cursor-pointer"
-                    >
-                      {categories.map((c) => (
-                        <option key={c} value={c}>{c}</option>
-                      ))}
-                    </select>
-                    <ChevronDown size={16} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                  <div className="md:col-span-2 flex flex-col gap-2">
+                    <label className="text-sm font-bold text-slate-700">Article Title *</label>
+                    <input
+                      value={blogForm.title}
+                      onChange={(e) => setBlogForm({ ...blogForm, title: e.target.value })}
+                      placeholder="e.g. My Google Software Engineer Interview Experience & Prep Strategy"
+                      required
+                      className="input-field"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-bold text-slate-700">Category *</label>
+                    <div className="relative">
+                      <select
+                        value={blogForm.category}
+                        onChange={(e) => setBlogForm({ ...blogForm, category: e.target.value as BlogCategory })}
+                        className="input-field appearance-none cursor-pointer pr-10"
+                      >
+                        {categories.map((c) => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                      <ChevronDown size={16} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-extrabold text-slate-700">Content / Article Body *</label>
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-bold text-slate-700">Article Body & Interview Insights *</label>
                   <textarea
                     value={blogForm.content}
                     onChange={(e) => setBlogForm({ ...blogForm, content: e.target.value })}
-                    placeholder="Write detailed rounds, coding questions, interview tips, and recommendations for students..."
+                    placeholder="Write detailed interview rounds, coding questions asked, prep tips, and recommendations for campus students..."
                     rows={12}
                     required
-                    className="w-full border border-slate-200 rounded-xl p-4 text-xs sm:text-sm outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 transition-all font-mono resize-y"
+                    className="input-field font-sans leading-relaxed resize-y"
                   />
                 </div>
 
-                <label className="flex items-center gap-2.5 cursor-pointer">
+                <label className="flex items-center gap-2.5 cursor-pointer bg-blue-50/60 p-4 rounded-xl border border-blue-100">
                   <input
                     type="checkbox"
                     checked={blogForm.published}
                     onChange={(e) => setBlogForm({ ...blogForm, published: e.target.checked })}
-                    className="w-4 h-4 rounded text-orange-600 focus:ring-orange-500 border-slate-300"
+                    className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300"
                   />
-                  <span className="text-xs font-bold text-slate-700">Publish this blog immediately to the student community</span>
+                  <span className="text-xs font-bold text-slate-800">Publish this blog immediately to the student community</span>
                 </label>
 
-                <div className="flex items-center gap-3 justify-end pt-4 border-t border-slate-100">
+                <div className="flex items-center gap-3 justify-end pt-2">
                   {editingBlog && (
                     <button
                       type="button"
@@ -559,9 +606,9 @@ export const AlumniPortal: React.FC<AlumniPortalProps> = ({
                   )}
                   <button
                     type="submit"
-                    className="px-6 py-3 rounded-xl bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-700 hover:to-amber-600 text-white font-extrabold text-xs shadow-md shadow-orange-500/20 transition-all flex items-center gap-2 cursor-pointer"
+                    className="btn btn-primary h-12 px-7 rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <FileText size={16} />
+                    <FileText size={18} />
                     {editingBlog ? 'Update Article' : 'Publish Article'}
                   </button>
                 </div>
@@ -571,18 +618,23 @@ export const AlumniPortal: React.FC<AlumniPortalProps> = ({
 
           {/* MY BLOGS TAB */}
           {activeTab === 'myBlogs' && (
-            <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200/90 shadow-2xs flex flex-col gap-6 animate-fade-in pb-10">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div className="flex flex-col gap-6 animate-fade-in pb-10">
+              <div className="sp-page-header">
                 <div>
-                  <h3 className="font-extrabold text-slate-900 font-display text-lg">My Published Blogs</h3>
-                  <p className="text-xs text-slate-500 font-medium mt-0.5">Manage and review all articles you have contributed</p>
+                  <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-display tracking-tight flex items-center gap-3">
+                    <BookOpen size={28} className="text-blue-600 shrink-0" />
+                    My Published Articles
+                  </h1>
+                  <p className="sp-page-subtitle">
+                    Manage and review all articles you have contributed to the placement portal.
+                  </p>
                 </div>
                 <button
                   onClick={() => {
                     resetBlogForm();
                     setActiveTab('blogs');
                   }}
-                  className="px-4 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-xs font-extrabold flex items-center gap-2 shadow-md shadow-orange-500/20 transition-all cursor-pointer"
+                  className="btn btn-primary h-11 px-5 rounded-xl font-bold text-xs shadow-md flex items-center gap-2 cursor-pointer"
                 >
                   <Plus size={16} />
                   Write New Blog
@@ -590,21 +642,21 @@ export const AlumniPortal: React.FC<AlumniPortalProps> = ({
               </div>
 
               {myBlogs.length === 0 ? (
-                <div className="text-center py-16 text-slate-400">
-                  <FileText size={40} className="mx-auto mb-2 text-slate-300" />
-                  <h4 className="font-extrabold text-slate-800 text-base">No blogs written yet</h4>
-                  <p className="text-xs text-slate-500 mt-1">Start sharing your experiences to guide students.</p>
+                <div className="sp-card text-center py-16 p-6 text-slate-400">
+                  <FileText size={44} className="mx-auto mb-2 text-slate-300" />
+                  <h4 className="font-extrabold text-slate-800 text-base font-display">No blogs written yet</h4>
+                  <p className="text-xs text-slate-500 mt-1">Start sharing your experiences to guide current students.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   {myBlogs.map((blog) => (
-                    <div key={blog.id} className="p-6 rounded-2xl border border-slate-200 bg-slate-50/50 hover:bg-white transition-all flex flex-col justify-between gap-4">
+                    <div key={blog.id} className="sp-card p-6 flex flex-col justify-between gap-4">
                       <div>
                         <div className="flex items-center justify-between gap-2 mb-2">
-                          <span className="px-2.5 py-0.5 rounded-md bg-orange-100 text-orange-800 text-[10px] font-extrabold uppercase">
+                          <span className="sp-badge sp-badge-info font-bold text-[10px] uppercase">
                             {blog.category}
                           </span>
-                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold ${blog.published ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-700'}`}>
+                          <span className={`sp-badge ${blog.published ? 'sp-badge-success' : 'bg-slate-100 text-slate-700'} font-bold text-[10px]`}>
                             {blog.published ? 'Published' : 'Draft'}
                           </span>
                         </div>
@@ -612,18 +664,18 @@ export const AlumniPortal: React.FC<AlumniPortalProps> = ({
                         <p className="text-xs text-slate-600 mt-2 line-clamp-3 leading-relaxed">{blog.content}</p>
                       </div>
 
-                      <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-200/60">
+                      <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-100">
                         <span className="text-[11px] text-slate-400 font-medium">Posted {blog.postedDate}</span>
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => setReadingBlog(blog)}
-                            className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50"
+                            className="px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-200 cursor-pointer"
                           >
                             Read
                           </button>
                           <button
                             onClick={() => startEditBlog(blog)}
-                            className="px-3 py-1.5 rounded-lg bg-orange-50 text-orange-700 border border-orange-200 text-xs font-bold hover:bg-orange-100 flex items-center gap-1"
+                            className="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold hover:bg-blue-100 flex items-center gap-1 cursor-pointer"
                           >
                             <Edit3 size={13} /> Edit
                           </button>
@@ -631,7 +683,7 @@ export const AlumniPortal: React.FC<AlumniPortalProps> = ({
                             onClick={() => {
                               if (window.confirm('Delete this blog post?')) onDeleteBlog(blog.id);
                             }}
-                            className="px-3 py-1.5 rounded-lg bg-rose-50 text-rose-600 border border-rose-200 text-xs font-bold hover:bg-rose-100 flex items-center gap-1"
+                            className="px-3 py-1.5 rounded-lg bg-rose-50 text-rose-600 border border-rose-200 text-xs font-bold hover:bg-rose-100 flex items-center gap-1 cursor-pointer"
                           >
                             <Trash2 size={13} /> Delete
                           </button>
@@ -646,77 +698,94 @@ export const AlumniPortal: React.FC<AlumniPortalProps> = ({
 
           {/* REFERRAL TAB */}
           {activeTab === 'referral' && (
-            <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200/90 shadow-2xs flex flex-col gap-6 animate-fade-in pb-10">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div className="flex flex-col gap-6 animate-fade-in pb-10">
+              <div className="sp-page-header">
                 <div>
-                  <h3 className="font-extrabold text-slate-900 font-display text-lg">Referral Opportunities</h3>
-                  <p className="text-xs text-slate-500 font-medium mt-0.5">Post active referral openings in your organization for students</p>
+                  <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-display tracking-tight flex items-center gap-3">
+                    <Briefcase size={28} className="text-blue-600 shrink-0" />
+                    Referral Opportunities
+                  </h1>
+                  <p className="sp-page-subtitle">
+                    Post active candidate referral openings from your organization for students.
+                  </p>
                 </div>
                 <button
                   onClick={() => {
                     resetReferralForm();
                     setShowReferralForm(true);
                   }}
-                  className="px-4 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-xs font-extrabold flex items-center gap-2 shadow-md shadow-orange-500/20 transition-all cursor-pointer"
+                  className="btn btn-primary h-11 px-5 rounded-xl font-bold text-xs shadow-md flex items-center gap-2 cursor-pointer"
                 >
                   <Plus size={16} />
-                  Add Referral
+                  Add Referral Post
                 </button>
               </div>
 
               {showReferralForm && (
-                <form onSubmit={handleReferralSubmit} className="p-6 rounded-2xl bg-orange-50/60 border border-orange-200/80 flex flex-col gap-4">
-                  <h4 className="font-extrabold text-slate-900 text-sm">{editingReferral ? 'Edit Referral' : 'Post New Referral'}</h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs font-extrabold text-slate-700">Company Name *</label>
+                <form onSubmit={handleReferralSubmit} className="sp-card p-6 sm:p-7 flex flex-col gap-5 border-blue-200 bg-blue-50/40">
+                  <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider font-display border-b border-slate-200/80 pb-3">
+                    {editingReferral ? 'Edit Referral Details' : 'Post New Referral Opening'}
+                  </h3>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-bold text-slate-700">Company Name *</label>
                       <input
                         required
                         value={referralForm.companyName}
                         onChange={(e) => setReferralForm({ ...referralForm, companyName: e.target.value })}
-                        placeholder="Microsoft / Google / Amazon"
-                        className="border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs bg-white outline-none focus:border-orange-500"
+                        placeholder="e.g. Microsoft / Google / Amazon"
+                        className="input-field"
                       />
                     </div>
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs font-extrabold text-slate-700">Job Role / Position *</label>
+
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-bold text-slate-700">Job Role / Position *</label>
                       <input
                         required
                         value={referralForm.role}
                         onChange={(e) => setReferralForm({ ...referralForm, role: e.target.value })}
-                        placeholder="Software Engineer / SDE-1"
-                        className="border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs bg-white outline-none focus:border-orange-500"
+                        placeholder="e.g. Software Engineer / SDE-1"
+                        className="input-field"
                       />
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-extrabold text-slate-700">Instructions / Description</label>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-bold text-slate-700">Job Description & Application Instructions</label>
                     <textarea
-                      rows={4}
+                      rows={5}
                       value={referralForm.description}
                       onChange={(e) => setReferralForm({ ...referralForm, description: e.target.value })}
-                      placeholder="Requirements, job ID, or email instructions for candidate resumes..."
-                      className="border border-slate-200 rounded-xl p-3 text-xs bg-white outline-none focus:border-orange-500"
+                      placeholder="Requirements, job ID, eligibility, or email instructions for student candidate resumes..."
+                      className="input-field font-sans resize-y"
                     />
                   </div>
 
-                  <div className="flex items-center justify-between pt-2">
+                  <div className="flex items-center justify-between pt-3 border-t border-slate-200/60">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={referralForm.active}
                         onChange={(e) => setReferralForm({ ...referralForm, active: e.target.checked })}
-                        className="w-4 h-4 rounded text-orange-600"
+                        className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300"
                       />
-                      <span className="text-xs font-bold text-slate-700">Active Referral Opening</span>
+                      <span className="text-xs font-bold text-slate-800">Active Referral Opening</span>
                     </label>
 
-                    <div className="flex items-center gap-2">
-                      <button type="button" onClick={resetReferralForm} className="px-4 py-2 rounded-xl bg-slate-200 text-slate-700 font-bold text-xs">
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={resetReferralForm}
+                        className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs transition-all cursor-pointer"
+                      >
                         Cancel
                       </button>
-                      <button type="submit" className="px-5 py-2 rounded-xl bg-orange-500 text-white font-extrabold text-xs shadow-md shadow-orange-500/20">
+                      <button
+                        type="submit"
+                        className="btn btn-primary h-11 px-6 rounded-xl font-bold text-xs shadow-md flex items-center gap-2 cursor-pointer"
+                      >
+                        <Briefcase size={16} />
                         {editingReferral ? 'Update Referral' : 'Post Referral'}
                       </button>
                     </div>
@@ -727,10 +796,10 @@ export const AlumniPortal: React.FC<AlumniPortalProps> = ({
               {/* Referral List */}
               <div className="flex flex-col gap-4">
                 {myReferrals.length === 0 && !showReferralForm ? (
-                  <div className="text-center py-16 text-slate-400">
-                    <Briefcase size={40} className="mx-auto mb-2 text-slate-300" />
-                    <h4 className="font-extrabold text-slate-800 text-base">No active referral posts</h4>
-                    <p className="text-xs text-slate-500 mt-1">Post referral opportunities to assist students in finding employment.</p>
+                  <div className="sp-card text-center py-16 p-6 text-slate-400">
+                    <Briefcase size={44} className="mx-auto mb-2 text-slate-300" />
+                    <h4 className="font-extrabold text-slate-800 text-base font-display">No active referral posts</h4>
+                    <p className="text-xs text-slate-500 mt-1">Post referral opportunities to assist campus students in getting hired.</p>
                   </div>
                 ) : (
                   myReferrals.map((ref) => (
@@ -750,7 +819,7 @@ export const AlumniPortal: React.FC<AlumniPortalProps> = ({
                       </div>
 
                       <div className="flex items-center gap-2 shrink-0 justify-end">
-                        <button onClick={() => startEditReferral(ref)} className="px-3.5 py-2 rounded-xl bg-orange-50 text-orange-700 border border-orange-200 text-xs font-extrabold flex items-center gap-1">
+                        <button onClick={() => startEditReferral(ref)} className="px-3.5 py-2 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 text-xs font-extrabold flex items-center gap-1">
                           <Edit3 size={14} /> Edit
                         </button>
                         <button onClick={() => { if (window.confirm('Delete referral?')) onDeleteReferral(ref.id); }} className="px-3.5 py-2 rounded-xl bg-rose-50 text-rose-600 border border-rose-200 text-xs font-extrabold flex items-center gap-1">
@@ -771,186 +840,227 @@ export const AlumniPortal: React.FC<AlumniPortalProps> = ({
 
           {/* SETTINGS / PROFILE TAB */}
           {activeTab === 'settings' && (
-            <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200/90 shadow-2xs flex flex-col gap-6 animate-fade-in pb-10">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div className="flex flex-col gap-6 animate-fade-in">
+              {/* Page Header */}
+              <div className="sp-page-header">
                 <div>
-                  <h3 className="font-extrabold text-slate-900 font-display text-lg">Alumni Profile & Backend Information</h3>
-                  <p className="text-xs text-slate-500 font-medium mt-0.5">
-                    Update all entity fields stored in PostgreSQL database (`location`, `bio`, social URLs, `currentCompany`, `currentRole`, `department`)
+                  <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-display tracking-tight flex items-center gap-3">
+                    <UserCheck size={28} className="text-blue-600 shrink-0" />
+                    Alumni Member Placement Profile
+                  </h1>
+                  <p className="sp-page-subtitle">
+                    Update your personal credentials, current organization, job role, location, bio, and developer portfolio links.
                   </p>
                 </div>
-                <span className="px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-extrabold flex items-center gap-1.5">
-                  <CheckCircle2 size={14} /> TPO Verified Alumni
+                <span className="sp-badge sp-badge-success flex items-center gap-1 shrink-0">
+                  <CheckCircle2 size={13} /> Verified Alumni
                 </span>
               </div>
 
               {profileSuccessMsg && (
-                <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-extrabold flex items-center gap-2 animate-fade-in">
-                  <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+                <div className="p-4 sm:p-5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs sm:text-sm font-extrabold flex items-center gap-3 animate-fade-in shadow-2xs">
+                  <CheckCircle2 size={18} className="text-emerald-600 shrink-0" />
                   <span>{profileSuccessMsg}</span>
                 </div>
               )}
 
               <form onSubmit={handleProfileSubmit} className="flex flex-col gap-6">
-                {/* Basic Personal Info */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-extrabold text-slate-700">Full Name *</label>
-                    <input
-                      required
-                      value={profileForm.name || ''}
-                      onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
-                      className="border border-slate-200 rounded-xl px-4 py-2.5 text-xs outline-none focus:border-orange-500"
-                    />
-                  </div>
+                {/* Section 1: Personal Credentials */}
+                <div className="sp-card flex flex-col gap-5 p-6 sm:p-7">
+                  <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider font-display border-b border-slate-100 pb-3">
+                    1. Personal Credentials
+                  </h3>
 
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-extrabold text-slate-700">Email Address (Account Identifier)</label>
-                    <input
-                      disabled
-                      value={alumni.email}
-                      className="border border-slate-200 rounded-xl px-4 py-2.5 text-xs bg-slate-100 text-slate-500 cursor-not-allowed"
-                    />
-                  </div>
-                </div>
-
-                {/* Company & Role */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-extrabold text-slate-700">Current Organization / Company</label>
-                    <input
-                      value={profileForm.currentCompany || ''}
-                      onChange={(e) => setProfileForm({ ...profileForm, currentCompany: e.target.value })}
-                      placeholder="Google / Microsoft / Amazon"
-                      className="border border-slate-200 rounded-xl px-4 py-2.5 text-xs outline-none focus:border-orange-500"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-extrabold text-slate-700">Job Role / Position</label>
-                    <input
-                      value={profileForm.currentRole || ''}
-                      onChange={(e) => setProfileForm({ ...profileForm, currentRole: e.target.value })}
-                      placeholder="Senior Software Engineer"
-                      className="border border-slate-200 rounded-xl px-4 py-2.5 text-xs outline-none focus:border-orange-500"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-extrabold text-slate-700">Location / City</label>
-                    <input
-                      value={profileForm.location || ''}
-                      onChange={(e) => setProfileForm({ ...profileForm, location: e.target.value })}
-                      placeholder="Bengaluru, KA / Remote"
-                      className="border border-slate-200 rounded-xl px-4 py-2.5 text-xs outline-none focus:border-orange-500"
-                    />
-                  </div>
-                </div>
-
-                {/* Department & Grad Year */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-extrabold text-slate-700">Graduation Year</label>
-                    <input
-                      type="number"
-                      value={profileForm.graduationYear || 2024}
-                      onChange={(e) => setProfileForm({ ...profileForm, graduationYear: parseInt(e.target.value, 10) || 2024 })}
-                      className="border border-slate-200 rounded-xl px-4 py-2.5 text-xs outline-none focus:border-orange-500"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-extrabold text-slate-700">Department / Stream</label>
-                    <select
-                      value={profileForm.department || 'Computer Science'}
-                      onChange={(e) => setProfileForm({ ...profileForm, department: e.target.value })}
-                      className="border border-slate-200 rounded-xl px-4 py-2.5 text-xs outline-none focus:border-orange-500 bg-white"
-                    >
-                      <option value="Computer Science">Computer Science</option>
-                      <option value="Information Technology">Information Technology</option>
-                      <option value="Electronics">Electronics</option>
-                      <option value="Mechanical">Mechanical</option>
-                      <option value="Electrical">Electrical</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Bio */}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-extrabold text-slate-700">Alumni Bio / Summary</label>
-                  <textarea
-                    rows={3}
-                    value={profileForm.bio || ''}
-                    onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })}
-                    placeholder="Brief description of career experience, tech stack expertise, and mentoring interest..."
-                    className="border border-slate-200 rounded-xl p-3.5 text-xs outline-none focus:border-orange-500"
-                  />
-                </div>
-
-                {/* Social & Developer Handles (Backend Fields) */}
-                <div className="p-5 rounded-2xl bg-orange-50/50 border border-orange-200/80 flex flex-col gap-4">
-                  <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider text-orange-900 flex items-center gap-2">
-                    <Globe size={15} className="text-orange-600" />
-                    Developer Portfolios & Professional Links (Database Entity)
-                  </h4>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs font-bold text-slate-700">LinkedIn URL</label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-bold text-slate-700">Full Name</label>
                       <input
+                        type="text"
+                        required
+                        value={profileForm.name || ''}
+                        onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                        placeholder="e.g. Raj Alumni"
+                        className="input-field"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-bold text-slate-700">Email Address (Account Identifier)</label>
+                      <input
+                        type="email"
+                        disabled
+                        value={alumni.email}
+                        className="input-field bg-slate-100 text-slate-500 cursor-not-allowed"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 2: Career & Organization Details */}
+                <div className="sp-card flex flex-col gap-5 p-6 sm:p-7">
+                  <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider font-display border-b border-slate-100 pb-3">
+                    2. Career & Organization Credentials
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-bold text-slate-700">Current Organization / Company</label>
+                      <input
+                        type="text"
+                        value={profileForm.currentCompany || ''}
+                        onChange={(e) => setProfileForm({ ...profileForm, currentCompany: e.target.value })}
+                        placeholder="e.g. Google / Microsoft / Amazon"
+                        className="input-field"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-bold text-slate-700">Job Role / Designation</label>
+                      <input
+                        type="text"
+                        value={profileForm.currentRole || ''}
+                        onChange={(e) => setProfileForm({ ...profileForm, currentRole: e.target.value })}
+                        placeholder="e.g. Senior Software Engineer"
+                        className="input-field"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-bold text-slate-700">Location / City</label>
+                      <input
+                        type="text"
+                        value={profileForm.location || ''}
+                        onChange={(e) => setProfileForm({ ...profileForm, location: e.target.value })}
+                        placeholder="e.g. Bengaluru, KA / Remote"
+                        className="input-field"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-bold text-slate-700">Graduation Year</label>
+                      <input
+                        type="number"
+                        value={profileForm.graduationYear || 2024}
+                        onChange={(e) => setProfileForm({ ...profileForm, graduationYear: parseInt(e.target.value, 10) || 2024 })}
+                        className="input-field"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-bold text-slate-700">Department / Stream</label>
+                      <select
+                        value={profileForm.department || 'Computer Science'}
+                        onChange={(e) => setProfileForm({ ...profileForm, department: e.target.value })}
+                        className="input-field"
+                      >
+                        <option value="Computer Science">Computer Science</option>
+                        <option value="Information Technology">Information Technology</option>
+                        <option value="Electronics">Electronics</option>
+                        <option value="Mechanical">Mechanical</option>
+                        <option value="Electrical">Electrical</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 3: Alumni Bio & Mentoring Overview */}
+                <div className="sp-card flex flex-col gap-5 p-6 sm:p-7">
+                  <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider font-display border-b border-slate-100 pb-3">
+                    3. Alumni Bio & Mentoring Overview
+                  </h3>
+
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-bold text-slate-700">
+                      Experience Summary & Career Guidance Notes
+                    </label>
+                    <textarea
+                      rows={5}
+                      value={profileForm.bio || ''}
+                      onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })}
+                      placeholder="Share your work experience highlights, tech stack expertise, interview tips, and mentoring focus..."
+                      className="input-field font-sans leading-relaxed text-slate-800 resize-none min-h-[120px]"
+                    />
+                  </div>
+                </div>
+
+                {/* Section 4: Developer Portfolios & Social Links */}
+                <div className="sp-card flex flex-col gap-5 p-6 sm:p-7">
+                  <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider font-display border-b border-slate-100 pb-3">
+                    4. Developer Portfolios & Professional Links
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                        <Globe size={15} className="text-blue-600" /> LinkedIn Profile URL
+                      </label>
+                      <input
+                        type="url"
                         value={profileForm.linkedinUrl || ''}
                         onChange={(e) => setProfileForm({ ...profileForm, linkedinUrl: e.target.value })}
                         placeholder="https://linkedin.com/in/username"
-                        className="border border-slate-200 rounded-xl px-3.5 py-2 text-xs bg-white outline-none focus:border-orange-500"
+                        className="input-field"
                       />
                     </div>
 
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs font-bold text-slate-700">GitHub URL</label>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                        <GitBranch size={15} className="text-slate-800" /> GitHub Profile URL
+                      </label>
                       <input
+                        type="url"
                         value={profileForm.githubUrl || ''}
                         onChange={(e) => setProfileForm({ ...profileForm, githubUrl: e.target.value })}
                         placeholder="https://github.com/username"
-                        className="border border-slate-200 rounded-xl px-3.5 py-2 text-xs bg-white outline-none focus:border-orange-500"
+                        className="input-field"
                       />
                     </div>
 
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs font-bold text-slate-700">Hashnode URL</label>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                        <Globe size={15} className="text-indigo-600" /> Hashnode Blog URL
+                      </label>
                       <input
+                        type="url"
                         value={profileForm.hashNodeUrl || ''}
                         onChange={(e) => setProfileForm({ ...profileForm, hashNodeUrl: e.target.value })}
                         placeholder="https://hashnode.com/@username"
-                        className="border border-slate-200 rounded-xl px-3.5 py-2 text-xs bg-white outline-none focus:border-orange-500"
+                        className="input-field"
                       />
                     </div>
 
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs font-bold text-slate-700">Dev.to URL</label>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                        <Globe size={15} className="text-slate-700" /> Dev.to Blog URL
+                      </label>
                       <input
+                        type="url"
                         value={profileForm.devToUrl || ''}
                         onChange={(e) => setProfileForm({ ...profileForm, devToUrl: e.target.value })}
                         placeholder="https://dev.to/username"
-                        className="border border-slate-200 rounded-xl px-3.5 py-2 text-xs bg-white outline-none focus:border-orange-500"
+                        className="input-field"
                       />
                     </div>
                   </div>
                 </div>
 
-                {/* Submit Action */}
-                <div className="flex justify-end pt-4 border-t border-slate-100">
+                <div className="flex justify-end pt-2">
                   <button
                     type="submit"
                     disabled={isSavingProfile}
-                    className="px-6 py-3 rounded-xl bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-700 hover:to-amber-600 text-white font-extrabold text-xs shadow-md shadow-orange-500/20 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                    className="btn btn-primary h-12 px-7 rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2"
                   >
                     {isSavingProfile ? (
                       <>
-                        <Loader2 size={16} className="animate-spin" /> Saving Changes...
+                        <Loader2 size={20} className="animate-spin" />
+                        Saving Profile Details...
                       </>
                     ) : (
                       <>
-                        <Save size={16} /> Save Profile Changes
+                        <Save size={20} />
+                        Save Profile & Career Credentials
                       </>
                     )}
                   </button>
@@ -959,6 +1069,8 @@ export const AlumniPortal: React.FC<AlumniPortalProps> = ({
             </div>
           )}
         </main>
+
+        <Footer />
       </div>
 
       {/* Reader Modal for Blogs */}
@@ -972,7 +1084,7 @@ export const AlumniPortal: React.FC<AlumniPortalProps> = ({
               <X size={20} />
             </button>
 
-            <span className="px-3 py-1 rounded-md bg-orange-100 text-orange-900 font-extrabold text-xs uppercase w-fit">
+            <span className="px-3 py-1 rounded-md bg-blue-100 text-blue-900 font-extrabold text-xs uppercase w-fit">
               {readingBlog.category}
             </span>
 
