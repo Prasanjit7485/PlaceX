@@ -40,6 +40,12 @@
   margin: auto;
 }
 
+.rp-modal-card-wide {
+  max-width: 1400px !important;
+  width: 96vw !important;
+  max-height: 94vh !important;
+}
+
 /* Header */
 .rp-modal-header {
   padding: 24px 28px 18px 28px;

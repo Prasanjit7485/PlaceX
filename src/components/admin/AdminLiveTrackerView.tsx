@@ -52,33 +52,38 @@ export const AdminLiveTrackerView: React.FC<AdminLiveTrackerViewProps> = ({
         </div>
       </div>
 
-      {activeTrackerDrive ? (
-        <div className="flex flex-col gap-5">
-          <div className="glass-card p-5 sm:p-6 rounded-2xl border border-slate-200 bg-white flex flex-wrap items-center justify-between gap-4 text-xs sm:text-sm shadow-xs">
-            <div className="flex items-center gap-2">
-              <span className="text-slate-500 font-semibold uppercase tracking-wider text-xs">Recruiting Company:</span>{' '}
-              <strong className="text-slate-900 font-bold text-base font-display">{activeTrackerDrive.companyName}</strong>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-slate-500 font-semibold uppercase tracking-wider text-xs">Package:</span>{' '}
-              <span className="sp-badge sp-badge-primary font-mono font-bold">{activeTrackerDrive.package}</span>
-            </div>
-            <div className="flex items-center gap-2 max-w-xl">
-              <span className="text-slate-500 font-semibold uppercase tracking-wider text-xs shrink-0">Rounds Order:</span>{' '}
-              <span className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-lg border border-blue-200 truncate">
-                {('rounds' in activeTrackerDrive ? activeTrackerDrive.rounds : []).join(' ➔ ')}
-              </span>
-            </div>
-          </div>
+      {activeTrackerDrive ? (() => {
+        const defaultRounds = ['Online Assessment', 'Technical Interview', 'HR Interview'];
+        const trackerRounds = (activeTrackerDrive && 'rounds' in activeTrackerDrive && Array.isArray((activeTrackerDrive as any).rounds) && (activeTrackerDrive as any).rounds.length > 0)
+          ? (activeTrackerDrive as any).rounds
+          : defaultRounds;
 
-          {/* Kanban Columns Board */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 items-start">
-            {('rounds' in activeTrackerDrive ? activeTrackerDrive.rounds : []).map((roundName, colIndex) => {
-              const columnApplications = activeTrackerApplications.filter(
-                (item) => item.app.currentRoundIndex === colIndex
-              );
-              const roundsList = 'rounds' in activeTrackerDrive ? activeTrackerDrive.rounds : [];
-              const isLastCol = colIndex === roundsList.length - 1;
+        return (
+          <div className="flex flex-col gap-5">
+            <div className="glass-card p-5 sm:p-6 rounded-2xl border border-slate-200 bg-white flex flex-wrap items-center justify-between gap-4 text-xs sm:text-sm shadow-xs">
+              <div className="flex items-center gap-2">
+                <span className="text-slate-500 font-semibold uppercase tracking-wider text-xs">Recruiting Company:</span>{' '}
+                <strong className="text-slate-900 font-bold text-base font-display">{activeTrackerDrive.companyName}</strong>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-slate-500 font-semibold uppercase tracking-wider text-xs">Package:</span>{' '}
+                <span className="sp-badge sp-badge-primary font-mono font-bold">{activeTrackerDrive.package || `${(activeTrackerDrive as any).salary || 6} LPA`}</span>
+              </div>
+              <div className="flex items-center gap-2 max-w-xl">
+                <span className="text-slate-500 font-semibold uppercase tracking-wider text-xs shrink-0">Rounds Order:</span>{' '}
+                <span className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-lg border border-blue-200 truncate">
+                  {trackerRounds.join(' ➔ ')}
+                </span>
+              </div>
+            </div>
+
+            {/* Kanban Columns Board */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 items-start">
+              {trackerRounds.map((roundName: string, colIndex: number) => {
+                const columnApplications = activeTrackerApplications.filter(
+                  (item) => item.app.currentRoundIndex === colIndex
+                );
+                const isLastCol = colIndex === trackerRounds.length - 1;
 
               return (
                 <div key={roundName} className="card-container p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80 flex flex-col gap-4">
@@ -98,8 +103,8 @@ export const AdminLiveTrackerView: React.FC<AdminLiveTrackerViewProps> = ({
                         <span className="text-[10px] text-slate-300">No candidates in round</span>
                       </div>
                     ) : (
-                      columnApplications.map(({ student }) => (
-                        <div key={student.id} className="card-kanban p-4 rounded-xl border border-slate-200 bg-white shadow-xs hover:border-blue-300 transition-all flex flex-col gap-3">
+                      columnApplications.map(({ student, app }) => (
+                        <div key={app?.id || `${student.id}-${activeTrackerDrive.id}`} className="card-kanban p-4 rounded-xl border border-slate-200 bg-white shadow-xs hover:border-blue-300 transition-all flex flex-col gap-3">
                           <div>
                             <h5 className="font-bold text-slate-900 text-sm font-display">{student.name}</h5>
                             <p className="text-xs text-slate-500 font-medium mt-0.5">
@@ -132,7 +137,8 @@ export const AdminLiveTrackerView: React.FC<AdminLiveTrackerViewProps> = ({
             })}
           </div>
         </div>
-      ) : (
+        );
+      })() : (
         <div className="glass-card text-center py-16 text-slate-400">
           <Briefcase size={48} className="mx-auto opacity-20 mb-3" />
           <p className="text-sm font-bold text-slate-700">Please launch recruitment drives to activate stage Kanban tracker.</p>

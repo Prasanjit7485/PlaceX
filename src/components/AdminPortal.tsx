@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Menu } from 'lucide-react';
 import { studentApi } from '../api/studentApi';
 import { jobPostingApi } from '../api/jobPostingApi';
-import type { Student, PlacementDrive, ResumeFeedback } from '../mockData';
+import type { Student, PlacementDrive, ResumeFeedback, Recruiter } from '../mockData';
 import type { StudentWithPlacement, DriveWithCompany, CalendarEvent } from '../api/types';
 import { Footer } from './Footer';
 import { ScrapedDrives } from './scrapper/ScrapedDrives';
@@ -25,7 +25,9 @@ interface AdminPortalProps {
   students: Student[];
   drives: PlacementDrive[];
   alumni: Alumni[];
+  recruiters?: Recruiter[];
 
+  onApproveRecruiter?: (id: string | number) => void;
   onApproveAlumni: (id: string) => void;
   onRejectAlumni: (id: string) => void;
   calendarEvents?: CalendarEvent[];
@@ -44,6 +46,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   students,
   drives,
   alumni,
+  recruiters = [],
+  onApproveRecruiter,
   onApproveAlumni,
   onRejectAlumni,
   calendarEvents,
@@ -222,7 +226,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     try {
       const newDrive = await jobPostingApi.createDrive(
         companyName.trim(),
-        companyLocation.trim(),
+        cleanLocation,
         cleanWebsite,
         {
           title: role.trim(),
@@ -402,12 +406,14 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             )}
 
             {activeTab === 'alumni' && (
-  <AdminAlumniManagementView
-    alumni={alumni}
-    onApprove={onApproveAlumni}
-    onReject={onRejectAlumni}
-  />
-)}
+              <AdminAlumniManagementView
+                alumni={alumni}
+                recruiters={recruiters}
+                onApproveRecruiter={onApproveRecruiter}
+                onApprove={onApproveAlumni}
+                onReject={onRejectAlumni}
+              />
+            )}
 
             {activeTab === 'scraped' && <ScrapedDrives />}
 

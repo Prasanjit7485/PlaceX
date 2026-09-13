@@ -170,11 +170,13 @@ export const jobPostingApi = {
       (c: { name: string; }) => c.name.trim().toLowerCase() === companyName.trim().toLowerCase()
     );
 
+    const safeLocation = companyLocation?.trim() || jobData.location?.trim() || 'Campus';
+
     const company =
       existing ??
       (await companyApi.create({
         name: companyName.trim(),
-        location: companyLocation.trim(),
+        location: safeLocation,
         website: companyWebsite?.trim() || undefined,
       }));
 

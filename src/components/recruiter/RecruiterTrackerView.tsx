@@ -59,30 +59,36 @@ export const RecruiterTrackerView: React.FC<RecruiterTrackerViewProps> = ({
         )}
       </div>
 
-      {activeTrackerDrive ? (
-        <div className="flex flex-col gap-4">
-          <div className="p-5 bg-white rounded-2xl border border-slate-200 flex flex-wrap gap-6 text-xs sm:text-sm shadow-xs">
-            <div>
-              <span className="text-slate-500 font-medium">Role:</span>{' '}
-              <strong className="text-slate-900 font-bold">{activeTrackerDrive.title}</strong>
-            </div>
-            <div>
-              <span className="text-slate-500 font-medium">Package:</span>{' '}
-              <strong className="text-slate-900 font-bold">{activeTrackerDrive.package}</strong>
-            </div>
-            <div>
-              <span className="text-slate-500 font-medium">Pipeline:</span>{' '}
-              <strong className="text-sky-600 font-bold">{activeTrackerDrive.rounds.join(' ➔ ')}</strong>
-            </div>
-          </div>
+      {activeTrackerDrive ? (() => {
+        const defaultRounds = ['Online Assessment', 'Technical Interview', 'HR Interview'];
+        const trackerRounds = (activeTrackerDrive && 'rounds' in activeTrackerDrive && Array.isArray((activeTrackerDrive as any).rounds) && (activeTrackerDrive as any).rounds.length > 0)
+          ? (activeTrackerDrive as any).rounds
+          : defaultRounds;
 
-          {/* Kanban Board */}
-          <div className="ap-kanban-board">
-            {activeTrackerDrive.rounds.map((roundName, colIndex) => {
-              const columnApplications = activeTrackerApplications.filter(
-                (item) => item.app.currentRoundIndex === colIndex
-              );
-              const isLastCol = colIndex === activeTrackerDrive.rounds.length - 1;
+        return (
+          <div className="flex flex-col gap-4">
+            <div className="p-5 bg-white rounded-2xl border border-slate-200 flex flex-wrap gap-6 text-xs sm:text-sm shadow-xs">
+              <div>
+                <span className="text-slate-500 font-medium">Role:</span>{' '}
+                <strong className="text-slate-900 font-bold">{activeTrackerDrive.title}</strong>
+              </div>
+              <div>
+                <span className="text-slate-500 font-medium">Package:</span>{' '}
+                <strong className="text-slate-900 font-bold">{activeTrackerDrive.package || `${(activeTrackerDrive as any).salary || 6} LPA`}</strong>
+              </div>
+              <div>
+                <span className="text-slate-500 font-medium">Pipeline:</span>{' '}
+                <strong className="text-sky-600 font-bold">{trackerRounds.join(' ➔ ')}</strong>
+              </div>
+            </div>
+
+            {/* Kanban Board */}
+            <div className="ap-kanban-board">
+              {trackerRounds.map((roundName: string, colIndex: number) => {
+                const columnApplications = activeTrackerApplications.filter(
+                  (item) => item.app.currentRoundIndex === colIndex
+                );
+                const isLastCol = colIndex === trackerRounds.length - 1;
 
               return (
                 <div key={roundName} className="ap-kanban-column">
@@ -139,7 +145,8 @@ export const RecruiterTrackerView: React.FC<RecruiterTrackerViewProps> = ({
             })}
           </div>
         </div>
-      ) : (
+        );
+      })() : (
         <div className="rp-card text-center py-16 text-slate-400">
           <Briefcase size={48} className="mx-auto opacity-20 mb-3" />
           <p className="text-sm font-bold text-slate-700">Please post company drives to activate candidate stage Kanban tracker.</p>

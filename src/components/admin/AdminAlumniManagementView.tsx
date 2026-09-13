@@ -17,9 +17,12 @@ import {
 } from 'lucide-react';
 
 import type { Alumni } from '../../api/alumniApi';
+import type { Recruiter } from '../../mockData';
 
 interface AdminAlumniManagementViewProps {
   alumni: Alumni[];
+  recruiters?: Recruiter[];
+  onApproveRecruiter?: (id: string | number) => void;
   onApprove: (id: string) => void;
   onReject: (id: string) => void;
 }
@@ -28,10 +31,16 @@ export const AdminAlumniManagementView: React.FC<
   AdminAlumniManagementViewProps
 > = ({
   alumni,
+  recruiters = [],
+  onApproveRecruiter,
   onApprove,
   onReject
 }) => {
   const [search, setSearch] = useState('');
+
+  const pendingRecruiters = useMemo(() => {
+    return recruiters.filter((r) => r.recruiterStatus === 'PENDING');
+  }, [recruiters]);
 
   const filtered = useMemo(() => {
     const query = search.toLowerCase().trim();
@@ -57,7 +66,7 @@ export const AdminAlumniManagementView: React.FC<
   );
 
   const approved = filtered.filter(
-    (item) => item.alumniStatus === 'APPROVED'
+    (item) => item.alumniStatus !== 'PENDING'
   );
 
   return (
@@ -141,10 +150,69 @@ export const AdminAlumniManagementView: React.FC<
               <ShieldCheck size={22} />
             </div>
           </div>
-          <div className="sp-kpi-value">{alumni.filter((item) => item.alumniStatus === 'APPROVED').length}</div>
+          <div className="sp-kpi-value">{approved.length}</div>
           <p className="text-xs text-slate-500 mt-2 font-medium">Verified Active Profiles</p>
         </div>
       </div>
+
+      {/* Pending Recruiter Approvals Section */}
+      {pendingRecruiters.length > 0 && (
+        <section className="glass-card p-6 sm:p-8 rounded-3xl border border-indigo-200 bg-gradient-to-r from-indigo-50/50 via-purple-50/20 to-white shadow-xs flex flex-col gap-6">
+          <div className="flex items-center justify-between border-b border-indigo-100 pb-4">
+            <h3 className="font-extrabold text-slate-900 font-display text-base sm:text-lg flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold border border-indigo-300 shadow-2xs">
+                <Building2 size={18} />
+              </div>
+              Pending Recruiter Approvals
+            </h3>
+            <span className="px-3.5 py-1.5 rounded-full bg-indigo-100 border border-indigo-300 text-indigo-900 font-extrabold text-xs shadow-2xs">
+              {pendingRecruiters.length} Recruiter{pendingRecruiters.length > 1 ? 's' : ''} Awaiting Approval
+            </span>
+          </div>
+
+          <div className="flex flex-col gap-4">
+            {pendingRecruiters.map((rec) => (
+              <div
+                key={rec.id}
+                className="p-6 rounded-2xl border border-indigo-100 hover:border-indigo-300 bg-white shadow-2xs hover:shadow-md transition-all duration-200 flex flex-col lg:flex-row lg:items-center justify-between gap-6"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-700 text-white font-black text-lg flex items-center justify-center shrink-0 shadow-md shadow-indigo-500/20 ring-4 ring-white">
+                    {rec.companyName ? rec.companyName.slice(0, 2).toUpperCase() : 'RC'}
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                      <h4 className="font-extrabold text-slate-900 text-base sm:text-lg font-display">
+                        {rec.name}
+                      </h4>
+                      <span className="px-2.5 py-0.5 rounded-md bg-indigo-50 border border-indigo-200 text-indigo-700 font-extrabold text-xs">
+                        {rec.designation || 'Corporate Recruiter'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 font-medium">{rec.email}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="px-3 py-1 bg-slate-50 border border-slate-200 rounded-xl text-xs font-extrabold text-slate-700 flex items-center gap-1.5">
+                        <Building2 size={13} className="text-indigo-600" />
+                        Company: {rec.companyName}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 shrink-0 justify-end">
+                  <button
+                    onClick={() => onApproveRecruiter && onApproveRecruiter(rec.id)}
+                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white font-extrabold text-xs shadow-md shadow-emerald-600/20 transition-all flex items-center gap-2 cursor-pointer"
+                  >
+                    <CheckCircle2 size={16} />
+                    Approve Recruiter
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Pending Alumni Section */}
       <section className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-200 bg-white shadow-xs flex flex-col gap-6">

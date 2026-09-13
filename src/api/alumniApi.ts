@@ -193,10 +193,28 @@ export const alumniApi = {
   },
 
   async approve(id: string | number): Promise<void> {
-    await request<string>(`/alumni/update/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify({ id: Number(id) })
-    });
+    try {
+      const existing = await this.getById(id);
+      await request<string>(`/alumni/update/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          id: Number(id),
+          name: existing.name || '',
+          email: existing.email || '',
+          bio: existing.bio || '',
+          location: existing.location || '',
+          linkedinUrl: existing.linkedinUrl || '',
+          githubUrl: existing.githubUrl || '',
+          hashNodeUrl: existing.hashNodeUrl || '',
+          devToUrl: existing.devToUrl || '',
+        }),
+      });
+    } catch {
+      await request<string>(`/alumni/update/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ id: Number(id) }),
+      });
+    }
   },
 
   async reject(id: string | number): Promise<void> {

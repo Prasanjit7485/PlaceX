@@ -21,6 +21,7 @@ import { FeaturesPage } from './components/FeaturesPage';
 import { HowItWorksPage } from './components/HowItWorksPage';
 
 import { Notification } from './components/Notification';
+import { NotificationBell } from './components/student/NotificationBell';
 import { RouteLoadingBar } from './components/RouteLoadingBar';
 
 import type { ToastType } from './components/Notification';
@@ -537,21 +538,6 @@ function AppContent() {
         return;
       }
 
-      /*
-       * Alumni must be approved by TPO
-       * before portal access.
-       */
-      if (
-        alum.alumniStatus !== 'APPROVED'
-      ) {
-        triggerToast(
-          'Your Alumni account is awaiting TPO approval.',
-          'warning'
-        );
-
-        return;
-      }
-
       setSession({
         role,
         alumniId: id,
@@ -918,7 +904,7 @@ function AppContent() {
     const createdDrive =
       await jobPostingApi.createDrive(
         newDriveData.companyName,
-        newDriveData.location || '',
+        newDriveData.location || 'Campus / Remote',
         undefined,
         requestData
       );
@@ -1246,8 +1232,26 @@ function AppContent() {
 
 
   /* =======================================================
-     PROMOTE STUDENT IN PLACEMENT PIPELINE
+     PROMOTE STUDENT (MOVE ROUND / SELECT)
   ======================================================= */
+
+  function getDefaultFutureLocalDateTime(hoursAhead = 24): string {
+    const date = new Date(Date.now() + hoursAhead * 60 * 60 * 1000);
+    const pad = (value: number) => String(value).padStart(2, "0");
+    return (
+      [
+        date.getFullYear(),
+        pad(date.getMonth() + 1),
+        pad(date.getDate()),
+      ].join("-") +
+      "T" +
+      [
+        pad(date.getHours()),
+        pad(date.getMinutes()),
+        pad(date.getSeconds()),
+      ].join(":")
+    );
+  }
 
   const handlePromoteStudent = (
     studentId: string,
@@ -1255,136 +1259,70 @@ function AppContent() {
     newRoundIndex: number,
     isFinalSelection: boolean
   ) => {
+    const student = students.find((item) => item.id === studentId);
+    const drive = drives.find((item) => item.id === driveId);
 
-    const student =
-      students.find(
-        (item) =>
-          item.id === studentId
-      );
+    if (!student || !drive) return;
 
-    const drive =
-      drives.find(
-        (item) =>
-          item.id === driveId
-      );
+    setStudents((previousStudents) =>
+      previousStudents.map((studentItem) => {
+        if (studentItem.id !== studentId) return studentItem;
 
-    if (!student || !drive) {
-      return;
-    }
+        const updatedApplications = studentItem.applications.map((application) => {
+          if (application.jobPostingId !== driveId) return application;
 
-
-    setStudents(
-      (previousStudents) =>
-        previousStudents.map(
-          (studentItem) => {
-
-            if (
-              studentItem.id !==
-              studentId
-            ) {
-              return studentItem;
-            }
-
-
-            const updatedApplications =
-              studentItem.applications.map(
-                (application) => {
-
-                  if (
-                    application.jobPostingId !==
-                    driveId
-                  ) {
-                    return application;
-                  }
-
-
-                  /*
-                   * Final selection.
-                   */
-
-                  if (
-                    isFinalSelection
-                  ) {
-                    return {
-                      ...application,
-
-                      status:
-                        'Selected' as const,
-
-                      currentRoundIndex:
-                        newRoundIndex - 1,
-
-                      feedback:
-                        `Offer issued! Selected for the role of ${drive.title} with a salary package of ${drive.package}.`,
-                    };
-                  }
-
-
-                  /*
-                   * Move to next round.
-                   */
-
-                  const nextRoundName =
-                    drive.rounds
-                      ? drive.rounds[
-                          newRoundIndex
-                        ]
-                      : `Round ${
-                          newRoundIndex + 1
-                        }`;
-
-                  return {
-                    ...application,
-
-                    status:
-                      nextRoundName as any,
-
-                    currentRoundIndex:
-                      newRoundIndex,
-
-                    feedback:
-                      `Successfully cleared stage. Promoted to "${nextRoundName}".`,
-                  };
-                }
-              );
-
-
-            /*
-             * If selected, update
-             * student's placement details.
-             */
-
-            if (
-              isFinalSelection
-            ) {
-              return {
-                ...studentItem,
-
-                placementStatus:
-                  'Placed' as const,
-
-                placedCompany:
-                  drive.companyName,
-
-                placedPackage:
-                  String(drive.package),
-
-                applications:
-                  updatedApplications,
-              };
-            }
-
-
+          if (isFinalSelection) {
             return {
-              ...studentItem,
-
-              applications:
-                updatedApplications,
+              ...application,
+              status: 'Selected' as const,
+              currentRoundIndex: newRoundIndex - 1,
+              feedback: `Offer issued! Selected for the role of ${drive.title} with a salary package of ${drive.package}.`,
             };
           }
-        )
+
+          return {
+            ...application,
+            status: 'Applied' as const,
+            currentRoundIndex: newRoundIndex,
+            feedback: `Promoted to ${drive.rounds?.[newRoundIndex] || `Round ${newRoundIndex + 1}`}`,
+          };
+        });
+
+        return {
+          ...studentItem,
+          applications: updatedApplications,
+        };
+      })
     );
 
+    // Persist to real backend REST API
+    applicationApi
+      .getAll()
+      .then((allApps) => {
+        const realApp = allApps.find(
+          (a) =>
+            String(a.studentId) === String(studentId) &&
+            String(a.jobPostingId) === String(driveId)
+        );
+        if (realApp) {
+          if (isFinalSelection) {
+            applicationApi.updateStatus(realApp.id, 'SELECTED').catch(() => {});
+          } else {
+            applicationApi.updateStatus(realApp.id, 'SHORTLISTED').catch(() => {});
+            const roundName = drive.rounds?.[newRoundIndex] || `Round ${newRoundIndex + 1}`;
+            applicationApi
+              .addRound(realApp.id, {
+                roundNumber: newRoundIndex + 1,
+                roundType: roundName,
+                scheduledAt: getDefaultFutureLocalDateTime(24),
+              })
+              .catch((err) => {
+                console.error('Failed to add interview round:', err);
+              });
+          }
+        }
+      })
+      .catch(() => {});
 
     if (isFinalSelection) {
       triggerToast(
@@ -1399,76 +1337,49 @@ function AppContent() {
     }
   };
 
-
   /* =======================================================
      REJECT STUDENT
   ======================================================= */
 
-  const handleRejectStudent = (
-    studentId: string,
-    driveId: string
-  ) => {
+  const handleRejectStudent = (studentId: string, driveId: string) => {
+    const student = students.find((item) => item.id === studentId);
+    const drive = drives.find((item) => item.id === driveId);
 
-    const student =
-      students.find(
-        (item) =>
-          item.id === studentId
-      );
+    if (!student || !drive) return;
 
-    const drive =
-      drives.find(
-        (item) =>
-          item.id === driveId
-      );
+    setStudents((previousStudents) =>
+      previousStudents.map((studentItem) => {
+        if (studentItem.id !== studentId) return studentItem;
 
-    if (!student || !drive) {
-      return;
-    }
-
-
-    setStudents(
-      (previousStudents) =>
-        previousStudents.map(
-          (studentItem) => {
-
-            if (
-              studentItem.id !==
-              studentId
-            ) {
-              return studentItem;
-            }
-
+        return {
+          ...studentItem,
+          applications: studentItem.applications.map((application) => {
+            if (application.jobPostingId !== driveId) return application;
 
             return {
-              ...studentItem,
-
-              applications:
-                studentItem.applications.map(
-                  (application) => {
-
-                    if (
-                      application.jobPostingId !==
-                      driveId
-                    ) {
-                      return application;
-                    }
-
-                    return {
-                      ...application,
-
-                      status:
-                        'Rejected' as const,
-
-                      feedback:
-                        `Recruitment cycle concluded at stage "${drive.rounds?.[application.currentRoundIndex] || 'Current Stage'}". Better luck next time!`,
-                    };
-                  }
-                ),
+              ...application,
+              status: 'Rejected' as const,
+              feedback: `Recruitment cycle concluded at stage "${drive.rounds?.[application.currentRoundIndex] || 'Current Stage'}". Better luck next time!`,
             };
-          }
-        )
+          }),
+        };
+      })
     );
 
+    // Persist to real backend REST API
+    applicationApi
+      .getAll()
+      .then((allApps) => {
+        const realApp = allApps.find(
+          (a) =>
+            String(a.studentId) === String(studentId) &&
+            String(a.jobPostingId) === String(driveId)
+        );
+        if (realApp) {
+          applicationApi.updateStatus(realApp.id, 'REJECTED').catch(() => {});
+        }
+      })
+      .catch(() => {});
 
     triggerToast(
       `${student.name} marked as Rejected for ${drive.companyName}.`,
@@ -1564,7 +1475,7 @@ function AppContent() {
     ]);
 
     triggerToast(
-      'Alumni registration submitted. TPO approval is required before portal access.',
+      'Alumni registered successfully. You can now sign in.',
       'success'
     );
   } catch (error) {
@@ -1580,6 +1491,29 @@ function AppContent() {
     );
   }
 };
+
+  /* =======================================================
+     APPROVE RECRUITER (TPO ONLY)
+  ======================================================= */
+
+  const handleApproveRecruiter = async (
+    recruiterId: string | number
+  ): Promise<void> => {
+    try {
+      await recruiterApi.approve(Number(recruiterId));
+      setRecruiters((previous) =>
+        previous.map((r) =>
+          r.id === recruiterId || String(r.id) === String(recruiterId)
+            ? { ...r, recruiterStatus: 'APPROVED' }
+            : r
+        )
+      );
+      triggerToast('Recruiter account approved successfully.', 'success');
+    } catch (error) {
+      console.error('Failed to approve recruiter:', error);
+      triggerToast('Failed to approve recruiter account.', 'error');
+    }
+  };
 
   /* =======================================================
      APPROVE ALUMNI
@@ -2055,6 +1989,8 @@ const handleDeleteReferral = async (
 
               <div className="flex items-center gap-3">
 
+                <NotificationBell studentId={loggedInStudent.id} />
+
                 <div className="hidden sm:flex flex-col text-right">
 
                   <span className="
@@ -2510,6 +2446,12 @@ const handleDeleteReferral = async (
 
                   onSaveFeedback={
                     saveFeedback
+                  }
+
+                  recruiters={recruiters}
+
+                  onApproveRecruiter={
+                    handleApproveRecruiter
                   }
 
                   onApproveAlumni={

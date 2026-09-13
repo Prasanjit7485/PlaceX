@@ -199,6 +199,19 @@ sourceType: 'RECRUITER',
         {/* Content Workspace Area */}
         <div className="rp-content-wrapper">
           <main className="rp-workspace">
+            {recruiter.recruiterStatus === 'PENDING' && (
+              <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 flex items-center justify-between animate-fade-in">
+                <div className="flex items-center gap-3">
+                  <span className="px-2.5 py-1 rounded-full text-xs font-extrabold uppercase bg-amber-500/20 text-amber-400 border border-amber-500/40">
+                    Account Status: PENDING
+                  </span>
+                  <span className="text-xs font-medium">
+                    Your recruiter account is currently pending approval by the TPO Administration. Full drive publishing options will activate once verified.
+                  </span>
+                </div>
+              </div>
+            )}
+
             {activeTab === 'dashboard' && (
               <RecruiterDashboardView
                 recruiter={recruiter}

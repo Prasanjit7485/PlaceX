@@ -225,6 +225,7 @@ export interface ApplicationResponse {
   jobPostingId: number;
   jobTitle: string;
   companyName: string;
+  currentRoundIndex?: number;
 }
 
 export interface PlacementEventResponse {
@@ -334,4 +335,20 @@ export interface AlumniBlogResponse {
   updatedAt?: string;
   createdAt?: string;
   alumniId: number;
+}
+
+export type NotificationsType =
+  | 'JOB_POSTED'
+  | 'APPLICATION_STATUS'
+  | 'INTERVIEW_SCHEDULED'
+  | 'GENERAL';
+
+export interface NotificationResponse {
+  id: number;
+  type: NotificationsType;
+  title: string;
+  body: string;
+  studentId?: number | string | null;
+  createdAt?: string | null;
+  read: boolean;
 }

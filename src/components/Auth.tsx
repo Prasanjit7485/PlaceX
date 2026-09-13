@@ -203,18 +203,17 @@ export const Auth: React.FC<AuthProps> = ({
     if (authMode === 'login') {
       const loginInput = studentRegNo.trim();
 
-      if (!loginInput.includes('@') || /^\d+$/.test(loginInput)) {
-        setError('Sorry, registration number login is currently unavailable. Please try logging in with your email address.');
+      if (!loginInput) {
+        setError('Please enter your student email or MAKAUT registration number.');
         return;
       }
 
       setIsSubmitting(true);
 
       try {
-        const res = await authApi.login({
-          email: loginInput,
+        const res = await authApi.loginStudent({
+          identifier: loginInput,
           password: studentPassword,
-          role: 'STUDENT',
         });
 
         if (res?.token) {
@@ -264,20 +263,31 @@ export const Auth: React.FC<AuthProps> = ({
       return;
     }
 
-    const normalizedEmail =
-      regEmail.toLowerCase().trim();
+    const normalizedEmail = regEmail.toLowerCase().trim();
+    const rawRegNo = regRegistrationNumber.trim();
+    const numericRegNo = rawRegNo.replace(/\D/g, '');
 
-    const normalizedRegNo =
-      regRegistrationNumber
-        .toLowerCase()
-        .trim();
+    if (numericRegNo.length !== 12) {
+      setError('Registration number must be exactly 12 digits (e.g. 241000110549).');
+      return;
+    }
+
+    if (!/^[a-zA-Z ]+$/.test(regName.trim())) {
+      setError('Name must contain only letters and spaces.');
+      return;
+    }
+
+    if (regPassword.length < 6) {
+      setError('Password must be at least 6 characters.');
+      return;
+    }
 
     if (
       students.some(
         (s) =>
           s.registrationNumber
             ?.toLowerCase()
-            .trim() === normalizedRegNo
+            .trim() === numericRegNo || String(s.id).trim() === numericRegNo
       )
     ) {
       setError(
@@ -300,8 +310,7 @@ export const Auth: React.FC<AuthProps> = ({
       return;
     }
 
-    const cgpaNum =
-      parseFloat(regCgpa);
+    const cgpaNum = parseFloat(regCgpa);
 
     if (
       Number.isNaN(cgpaNum) ||
@@ -315,16 +324,13 @@ export const Auth: React.FC<AuthProps> = ({
     }
 
     const newStudent: Student = {
-      id: `std_${Math.random()
-        .toString(36)
-        .substring(2, 11)}`,
+      id: numericRegNo,
 
       name: regName.trim(),
 
       email: normalizedEmail,
 
-      registrationNumber:
-        regRegistrationNumber.trim(),
+      registrationNumber: numericRegNo,
 
       password: regPassword,
 
@@ -347,8 +353,7 @@ export const Auth: React.FC<AuthProps> = ({
         .map((skill) => skill.trim())
         .filter(Boolean),
 
-      projectsCount:
-        parseInt(regProjects) || 0,
+      projectsCount: parseInt(regProjects) || 0,
 
       resumeText: regResume,
 
@@ -356,8 +361,6 @@ export const Auth: React.FC<AuthProps> = ({
 
       department: regBranch
     };
-
-    const numericRegNo = regRegistrationNumber.trim().replace(/\D/g, '').padEnd(12, '0').slice(0, 12);
 
     setIsSubmitting(true);
     try {
@@ -1024,7 +1027,7 @@ export const Auth: React.FC<AuthProps> = ({
                       <div className="auth-input-group">
 
                         <label className="auth-input-label">
-                          Student Email Address
+                          Email Address or Registration Number
                         </label>
 
                         <div className="auth-input-box">
@@ -1035,7 +1038,7 @@ export const Auth: React.FC<AuthProps> = ({
                           />
 
                           <input
-                            type="email"
+                            type="text"
                             required
                             value={
                               studentRegNo
@@ -1045,7 +1048,7 @@ export const Auth: React.FC<AuthProps> = ({
                                 e.target.value
                               )
                             }
-                            placeholder="student@example.com"
+                            placeholder="student@example.com or 241000110549"
                             className="auth-input-field"
                           />
 
