@@ -329,6 +329,7 @@ function AppContent() {
 
         setAlumni(alumniData);
         setBlogs(blogsData);
+        console.log("BLOGS FROM BACKEND:", blogsData);
 
         const appsByStudent = new Map<string, Application[]>();
         for (const app of applicationsList) {
@@ -1604,7 +1605,7 @@ function AppContent() {
 
   
 
-  const handleAddBlog = async (
+  const handleCreateBlog = async (
   blogData: Omit<
     Blog,
     'id' | 'alumniId' | 'postedDate'
@@ -2514,7 +2515,7 @@ const handleDeleteReferral = async (
                     referrals={referrals}
                     onLogout={handleLogout}
                     onUpdateProfile={handleUpdateAlumniProfile}
-                    onCreateBlog={handleAddBlog}
+                    onCreateBlog={handleCreateBlog}
                     onUpdateBlog={handleUpdateBlog}
                     onDeleteBlog={handleDeleteBlog}
                     onCreateReferral={handleAddReferral}
