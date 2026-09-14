@@ -172,6 +172,75 @@ export const RecruiterPortal: React.FC<RecruiterPortalProps> = ({
       .map((app) => ({ student: s, app }))
   );
 
+  const defaultRounds = ['Online Assessment', 'Technical Interview', 'HR Interview'];
+
+const trackerRounds =
+  activeTrackerDrive &&
+  'rounds' in activeTrackerDrive &&
+  Array.isArray((activeTrackerDrive as any).rounds) &&
+  (activeTrackerDrive as any).rounds.length > 0
+    ? (activeTrackerDrive as any).rounds
+    : defaultRounds;
+
+  function handleDownloadStudents(): void {
+  if (!activeTrackerDrive || activeTrackerApplications.length === 0) {
+    alert('No students available to download for this drive.');
+    return;
+  }
+
+  const headers = [
+    'Student Name',
+    'Email',
+    'Department',
+    'CGPA',
+    'Backlogs',
+    'Application Status',
+    'Current Round'
+  ];
+
+  const rows = activeTrackerApplications.map(({ student, app }) => {
+    const currentRound =
+      app.currentRoundIndex !== undefined
+        ? trackerRounds[app.currentRoundIndex] || 'Completed'
+        : 'Not Started';
+
+    return [
+      student.name || '',
+      student.email || '',
+      student.department || '',
+      student.cgpa ?? '',
+      student.backlogs ?? 0,
+      app.status || '',
+      currentRound
+    ];
+  });
+
+  const csvContent = [
+    headers.join(','),
+    ...rows.map((row) =>
+      row
+        .map((value) => `"${String(value).replace(/"/g, '""')}"`)
+        .join(',')
+    )
+  ].join('\n');
+
+  const blob = new Blob([csvContent], {
+    type: 'text/csv;charset=utf-8;'
+  });
+
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${activeTrackerDrive.title || activeTrackerDrive.role}_Applicants.csv`;
+
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  URL.revokeObjectURL(url);
+}
+
   return (
     <div className="rp-layout">
       {/* Mobile Top Bar */}
@@ -284,6 +353,7 @@ export const RecruiterPortal: React.FC<RecruiterPortalProps> = ({
                 setSelectedStudentForResume={setSelectedStudentForResume}
                 onPromoteStudent={onPromoteStudent}
                 onRejectStudent={onRejectStudent}
+                onDownloadStudents={handleDownloadStudents}
               />
             )}
           </main>

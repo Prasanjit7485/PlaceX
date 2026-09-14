@@ -1,5 +1,5 @@
 import React from 'react';
-import { GitMerge, ArrowRight, X, Briefcase, FileText, Mail, Sparkles, CheckCircle2, Users, Award, GraduationCap, Clock } from 'lucide-react';
+import { GitMerge, ArrowRight, X, Briefcase, FileText, Mail, Sparkles, CheckCircle2, Users, Award, GraduationCap, Clock, Download  } from 'lucide-react';
 import type { Student, PlacementDrive, Recruiter } from '../../mockData';
 import '../admin/RecordPlacementOfferModal.css';
 
@@ -14,6 +14,7 @@ interface RecruiterTrackerViewProps {
   setSelectedStudentForResume: (s: Student | null) => void;
   onPromoteStudent: (studentId: string, driveId: string, newRoundIndex: number, isFinalSelection: boolean) => void;
   onRejectStudent: (studentId: string, driveId: string) => void;
+  onDownloadStudents: () => void;
 }
 
 export const RecruiterTrackerView: React.FC<RecruiterTrackerViewProps> = ({
@@ -26,7 +27,8 @@ export const RecruiterTrackerView: React.FC<RecruiterTrackerViewProps> = ({
   selectedStudentForResume,
   setSelectedStudentForResume,
   onPromoteStudent,
-  onRejectStudent
+  onRejectStudent,
+  onDownloadStudents
 }) => {
   const defaultRounds = ['Online Assessment', 'Technical Interview', 'HR Interview'];
   const trackerRounds = (activeTrackerDrive && 'rounds' in activeTrackerDrive && Array.isArray((activeTrackerDrive as any).rounds) && (activeTrackerDrive as any).rounds.length > 0)
@@ -50,22 +52,37 @@ export const RecruiterTrackerView: React.FC<RecruiterTrackerViewProps> = ({
         </div>
 
         {myDrives.length > 0 && (
-          <div className="flex flex-col gap-1.5 min-w-[260px]">
-            <label className="text-xs font-bold text-slate-700">Select Active Role Drive</label>
-            <select
-              value={trackerDriveId}
-              onChange={(e) => setTrackerDriveId(e.target.value)}
-              className="input-field font-bold text-slate-800"
-            >
-              {myDrives.map((drv) => (
-                <option key={drv.id} value={drv.id}>
-                  {drv.title || drv.role} ({drv.package})
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-      </div>
+  <div className="flex items-end gap-3 flex-wrap">
+    <button
+      type="button"
+      onClick={onDownloadStudents}
+      className="h-10 px-4 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs inline-flex items-center justify-center gap-2 border border-slate-200 shadow-2xs transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+      title="Download students for this drive"
+    >
+      <Download size={16} />
+      Download Students
+    </button>
+
+    <div className="flex flex-col gap-1.5 min-w-65">
+      <label className="text-xs font-bold text-slate-700">
+        Select Active Role Drive
+      </label>
+
+      <select
+        value={trackerDriveId}
+        onChange={(e) => setTrackerDriveId(e.target.value)}
+        className="input-field font-bold text-slate-800"
+      >
+        {myDrives.map((drv) => (
+          <option key={drv.id} value={drv.id}>
+            {drv.title || drv.role} ({drv.package})
+          </option>
+        ))}
+      </select>
+    </div>
+  </div>
+)}
+  </div>
 
       {activeTrackerDrive ? (
         <div className="flex flex-col gap-6">
@@ -115,7 +132,7 @@ export const RecruiterTrackerView: React.FC<RecruiterTrackerViewProps> = ({
                   </div>
 
                   {/* Candidates Cards Container */}
-                  <div className="flex flex-col gap-4 min-h-[180px]">
+                  <div className="flex flex-col gap-4 min-h-45">
                     {columnApplications.length === 0 ? (
                       <div className="p-8 rounded-2xl border border-dashed border-slate-200/90 bg-white/60 text-slate-400 text-xs font-semibold text-center flex flex-col items-center justify-center gap-2 my-auto">
                         <Sparkles size={22} className="text-slate-300" />
@@ -139,7 +156,7 @@ export const RecruiterTrackerView: React.FC<RecruiterTrackerViewProps> = ({
                             className="card-kanban p-5 rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-md hover:border-blue-400 transition-all flex flex-col gap-4 group"
                           >
                             <div className="flex items-center gap-3.5">
-                              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-extrabold text-sm flex items-center justify-center shrink-0 shadow-xs border border-white/20">
+                              <div className="w-11 h-11 rounded-2xl bg-linear-to-br from-blue-600 to-indigo-600 text-white font-extrabold text-sm flex items-center justify-center shrink-0 shadow-xs border border-white/20">
                                 {initials}
                               </div>
                               <div className="min-w-0 flex-1">
@@ -177,7 +194,7 @@ export const RecruiterTrackerView: React.FC<RecruiterTrackerViewProps> = ({
                                 </button>
                                 <button
                                   onClick={() => onPromoteStudent(student.id, activeTrackerDrive.id, colIndex + 1, isLastCol)}
-                                  className="w-9 h-9 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white flex items-center justify-center transition-all shadow-sm cursor-pointer hover:scale-105 active:scale-95"
+                                  className="w-9 h-9 rounded-xl bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white flex items-center justify-center transition-all shadow-sm cursor-pointer hover:scale-105 active:scale-95"
                                   title={isLastCol ? 'Select Candidate & Issue Offer' : 'Promote Candidate to Next Stage'}
                                 >
                                   {isLastCol ? (

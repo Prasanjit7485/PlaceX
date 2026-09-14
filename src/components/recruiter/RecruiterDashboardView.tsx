@@ -24,7 +24,7 @@ export const RecruiterDashboardView: React.FC<RecruiterDashboardViewProps> = ({
   return (
     <div className="flex flex-col gap-7 animate-fade-in pb-6">
       {/* Light Theme Hero Banner */}
-      <div className="glass-card p-6 sm:p-8 rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50/80 via-indigo-50/40 to-white shadow-xs flex flex-col gap-4">
+      <div className="glass-card p-6 sm:p-8 rounded-2xl border border-blue-100 bg-linear-to-r from-blue-50/80 via-indigo-50/40 to-white shadow-xs flex flex-col gap-4">
         {/* Top Badges & Button */}
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-2.5 flex-wrap">
