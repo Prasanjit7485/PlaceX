@@ -310,6 +310,56 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       .map((app) => ({ student: s, app }))
   );
 
+  const handleDownloadStudents = () => {
+  const headers = [
+    'Name',
+    'Email',
+    'Registration Number',
+    'Department',
+    'CGPA',
+    'Backlogs',
+    'Placement Status',
+    'Placed Company',
+    'Placed Package',
+    'ATS Score'
+  ];
+
+  const rows = filteredStudents.map((student) => [
+    student.name,
+    student.email,
+    student.registrationNumber || '',
+    student.department,
+    student.cgpa,
+    student.backlogs,
+    student.placementStatus,
+    student.placedCompany || '',
+    student.placedPackage || '',
+    student.resumeScore ?? 0
+  ]);
+
+  const csvContent = [
+    headers.join(','),
+    ...rows.map((row) =>
+      row
+        .map((value) => `"${String(value).replace(/"/g, '""')}"`)
+        .join(',')
+    )
+  ].join('\n');
+
+  const blob = new Blob([csvContent], {
+    type: 'text/csv;charset=utf-8;'
+  });
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+
+  link.href = url;
+  link.download = 'students-filtered.csv';
+  link.click();
+
+  URL.revokeObjectURL(url);
+};
+
   return (
     <div className="ap-layout">
       {/* Mobile Top Bar */}
@@ -447,6 +497,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 onSaveFeedback={onSaveFeedback}
                 handleManualStatusSave={handleManualStatusSave}
                 drives={drives}
+                onDownloadStudents={handleDownloadStudents}
               />
             )}
 

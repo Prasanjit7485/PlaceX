@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, FileText, ChevronRight, X, Save, TrendingUp, CheckCircle2, Award, Sparkles } from 'lucide-react';
+import { Users, FileText, ChevronRight, X, Save, TrendingUp, CheckCircle2, Award, Sparkles} from 'lucide-react';
 import type { Student, PlacementDrive, ResumeFeedback } from '../../mockData';
 import type { StudentWithPlacement } from '../../api/types';
 import { StudentVisualizerView } from '../student/StudentVisualizerView';
@@ -10,6 +10,7 @@ import './RecordPlacementOfferModal.css';
 interface AdminStudentDatabaseViewProps {
   filteredStudents: (Student | StudentWithPlacement)[];
   allStudents: (Student | StudentWithPlacement)[];
+  onDownloadStudents: () => void;
   studentSearch: string;
   setStudentSearch: (v: string) => void;
   branchFilter: string;
@@ -57,6 +58,7 @@ interface AdminStudentDatabaseViewProps {
 export const AdminStudentDatabaseView: React.FC<AdminStudentDatabaseViewProps> = ({
   filteredStudents,
   allStudents,
+  onDownloadStudents,
   studentSearch,
   setStudentSearch,
   branchFilter,
@@ -83,6 +85,8 @@ export const AdminStudentDatabaseView: React.FC<AdminStudentDatabaseViewProps> =
   handleManualStatusSave,
   drives = []
 }) => {
+
+
   const [activeMobileStudent, setActiveMobileStudent] = useState<(Student | StudentWithPlacement) | null>(null);
   const [selectedStudentForVisualizer, setSelectedStudentForVisualizer] = useState<(Student | StudentWithPlacement) | null>(null);
   const [selectedAppId, setSelectedAppId] = useState<string>('');
@@ -142,9 +146,28 @@ export const AdminStudentDatabaseView: React.FC<AdminStudentDatabaseViewProps> =
             Review academic qualifications, filter by department & CGPA thresholds, edit placement statuses, and inspect candidate resumes.
           </p>
         </div>
-        <div className="px-4 py-2 bg-slate-100 rounded-xl text-xs text-slate-700 font-bold self-start sm:self-center">
-          Showing <span className="text-blue-600 font-bold">{filteredStudents.length}</span> of {allStudents.length} Candidates
-        </div>
+        <div className="flex items-center gap-3 self-start sm:self-center">
+  <div className="flex items-center gap-3 self-start sm:self-center">
+  <button
+    onClick={onDownloadStudents}
+    disabled={filteredStudents.length === 0}
+    className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-xs font-extrabold transition-all shadow-sm flex items-center gap-2"
+  >
+    <FileText size={16} />
+    Download Database
+  </button>
+
+  <div className="px-4 py-2 bg-slate-100 rounded-xl text-xs text-slate-700 font-bold">
+    Showing{' '}
+    <span className="text-blue-600 font-bold">
+      {filteredStudents.length}
+    </span>{' '}
+    of {allStudents.length} Candidates
+  </div>
+</div>
+
+  
+</div>
       </div>
 
       {/* Filter Tools Bar */}
@@ -246,7 +269,7 @@ export const AdminStudentDatabaseView: React.FC<AdminStudentDatabaseViewProps> =
                 <tr key={student.id} className="hover:bg-slate-50/90 transition-colors">
                   <td className="px-8 py-6">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white font-black text-base flex items-center justify-center shrink-0 shadow-sm ring-2 ring-white">
+                      <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-blue-600 to-indigo-700 text-white font-black text-base flex items-center justify-center shrink-0 shadow-sm ring-2 ring-white">
                         {student.name.charAt(0)}
                       </div>
                       <div className="flex flex-col gap-0.5">
