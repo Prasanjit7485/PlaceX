@@ -309,14 +309,14 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
       name: profileName.trim(),
       email: profileEmail.trim(),
       password: profilePassword || "password123",
-      phone: "9876543210",
+      phone: currentStudent.phone || "9876543210",
       department: profileBranch,
       activeBacklogs: backlogsNum,
-      resumeUrl: "http://example.com/resume.pdf",
-      year: 4,
+      resumeUrl: profileResume || "https://example.com/resume.pdf",
+      year: currentStudent.year || 4,
       cgpa: cgpaNum
-    }).catch(() => {
-      // Silently fall back if backend is offline
+    }).catch((err) => {
+      console.warn('Backend student update failed or offline:', err);
     });
 
     const updatedStudent: Student = {

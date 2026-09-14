@@ -5,7 +5,6 @@ import type { CalendarEvent } from "../../api/types";
 import UpcomingEvents from "./UpcomingEvents";
 import EventForm from "./EventForm";
 import EventModal from "./EventModal";
-import { INITIAL_CALENDAR_EVENTS } from "../../mockCalendar";
 import { calendarApi } from "../../api/calendarApi";
 import { jobPostingApi } from "../../api/jobPostingApi";
 import { useState, useEffect, useRef } from "react";
@@ -24,9 +23,7 @@ export default function CalendarPage({
   events: propEvents,
   onAddEvent
 }: CalendarPageProps) {
-  const [events, setEvents] = useState<CalendarEvent[]>(
-    propEvents && propEvents.length > 0 ? propEvents : INITIAL_CALENDAR_EVENTS
-  );
+  const [events, setEvents] = useState<CalendarEvent[]>(propEvents || []);
   const [showEventForm, setShowEventForm] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const calendarRef = useRef<FullCalendar | null>(null);
@@ -56,15 +53,12 @@ export default function CalendarPage({
 
         let combinedEvents: CalendarEvent[] = propEvents && propEvents.length > 0 ? [...propEvents] : [];
 
-        // 1. TPO calendar events
         if (Array.isArray(apiEvents) && apiEvents.length > 0) {
           apiEvents.forEach((ae) => {
             if (!combinedEvents.some((e) => String(e.id) === String(ae.id))) {
               combinedEvents.push(ae);
             }
           });
-        } else if (combinedEvents.length === 0) {
-          combinedEvents.push(...INITIAL_CALENDAR_EVENTS);
         }
 
         // 2. Derive placement application deadlines from job posting data
@@ -90,25 +84,6 @@ export default function CalendarPage({
           });
         }
 
-        // 3. Load student private off-campus events ONLY when in student mode (readOnly === true)
-        if (readOnly) {
-          try {
-            const storedPrivate = localStorage.getItem('placex_private_events');
-            if (storedPrivate) {
-              const parsedPrivate: CalendarEvent[] = JSON.parse(storedPrivate);
-              if (Array.isArray(parsedPrivate)) {
-                parsedPrivate.forEach((pe) => {
-                  if (!combinedEvents.some((e) => String(e.id) === String(pe.id))) {
-                    combinedEvents.push({ ...pe, isPrivate: true });
-                  }
-                });
-              }
-            }
-          } catch (err) {
-            console.warn('Failed to parse private events from localStorage:', err);
-          }
-        }
-
         // Filter events strictly: Admin/TPO (readOnly=false) must never see private events
         const filteredEvents = readOnly
           ? combinedEvents
@@ -130,11 +105,10 @@ export default function CalendarPage({
   }, [propEvents, readOnly]);
 
   const handleSaveEvent = (newEvent: Record<string, string>) => {
-    const isPrivate = readOnly;
     const calendarEvent: CalendarEvent = {
-      id: isPrivate ? `private-${Date.now()}` : `event-${Date.now()}`,
-      title: isPrivate ? `🔒 ${newEvent.company} - ${newEvent.role} (${newEvent.type})` : `${newEvent.company} - ${newEvent.role} (${newEvent.type})`,
-      eventType: newEvent.type || (isPrivate ? "Off-Campus Interview" : "PPT"),
+      id: `event-${Date.now()}`,
+      title: `${newEvent.company} - ${newEvent.role} (${newEvent.type})`,
+      eventType: newEvent.type || "PPT",
       companyName: newEvent.company,
       company: newEvent.company,
       role: newEvent.role,
@@ -142,38 +116,25 @@ export default function CalendarPage({
       startTime: newEvent.time,
       location: newEvent.venue,
       venue: newEvent.venue,
-      description: newEvent.description ? (isPrivate ? `[Private Student Event] ${newEvent.description}` : newEvent.description) : undefined,
+      description: newEvent.description || undefined,
       status: "SCHEDULED",
       branches: newEvent.branches ? newEvent.branches.split(',').map((b: string) => b.trim()) : [],
-      isPrivate: isPrivate,
     };
 
-    if (isPrivate) {
-      try {
-        const storedPrivate = localStorage.getItem('placex_private_events');
-        const existingList: CalendarEvent[] = storedPrivate ? JSON.parse(storedPrivate) : [];
-        const updatedList = [calendarEvent, ...existingList];
-        localStorage.setItem('placex_private_events', JSON.stringify(updatedList));
-      } catch (err) {
-        console.warn('Failed to store private event:', err);
-      }
-      setEvents((prevEvents) => [calendarEvent, ...prevEvents]);
-    } else {
-      setEvents((prevEvents) => [calendarEvent, ...prevEvents]);
-      if (onAddEvent) {
-        onAddEvent(calendarEvent);
-      }
-      calendarApi.create({
-        title: calendarEvent.title,
-        eventType: calendarEvent.eventType,
-        scheduledDate: calendarEvent.scheduledDate,
-        startTime: calendarEvent.startTime,
-        location: calendarEvent.location,
-        description: calendarEvent.description
-      }).catch(() => {
-        // Ignored for mock mode
-      });
+    setEvents((prevEvents) => [calendarEvent, ...prevEvents]);
+    if (onAddEvent) {
+      onAddEvent(calendarEvent);
     }
+    calendarApi.create({
+      title: calendarEvent.title,
+      eventType: calendarEvent.eventType,
+      scheduledDate: calendarEvent.scheduledDate,
+      startTime: calendarEvent.startTime,
+      location: calendarEvent.location,
+      description: calendarEvent.description
+    }).catch(() => {
+      // Ignored for mock mode
+    });
 
     setShowEventForm(false);
   };
@@ -201,8 +162,8 @@ export default function CalendarPage({
       {/* PAGE HEADER */}
       <div className="sp-page-header">
         <div>
-          <h1 className="sp-page-title">
-            <CalendarIcon size={28} className="text-blue-600" />
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-display tracking-tight flex items-center gap-3">
+            <CalendarIcon size={28} className="text-blue-600 shrink-0" />
             Placement Calendar
           </h1>
           <p className="sp-page-subtitle">

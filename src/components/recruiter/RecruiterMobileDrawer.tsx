@@ -1,13 +1,13 @@
 import React from 'react';
 import {
+  X,
   LayoutDashboard,
   Briefcase,
-  GitMerge,
-  X,
-  Building2
+  GitMerge
 } from 'lucide-react';
-import type { Recruiter } from '../../mockData';
 import type { RecruiterTabType } from './RecruiterSidebar';
+import type { Recruiter } from '../../mockData';
+import placedLogo from '../../assets/placed_logo.png';
 
 interface RecruiterMobileDrawerProps {
   isOpen: boolean;
@@ -39,8 +39,8 @@ export const RecruiterMobileDrawer: React.FC<RecruiterMobileDrawerProps> = ({
         {/* Drawer Header */}
         <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-600 to-blue-700 text-white flex items-center justify-center font-extrabold shadow-md shadow-sky-500/20 shrink-0">
-              <Building2 size={22} />
+            <div className="w-10 h-10 rounded-xl bg-white text-white flex items-center justify-center border border-slate-200 shrink-0 p-1">
+              <img src={placedLogo} alt="PlaceD Logo" className="w-full h-full object-contain" />
             </div>
             <div>
               <h3 className="font-extrabold text-slate-900 text-base font-display leading-tight tracking-tight">{recruiter.companyName}</h3>
@@ -94,7 +94,7 @@ export const RecruiterMobileDrawer: React.FC<RecruiterMobileDrawerProps> = ({
 
         {/* Footer */}
         <div className="p-4 border-t border-slate-100 bg-slate-50/50 text-center">
-          <p className="text-[11px] font-semibold text-slate-400">PlaceX Corporate Partner Console</p>
+          <p className="text-[11px] font-semibold text-slate-400">PlaceD Corporate Partner Console</p>
         </div>
       </div>
     </>

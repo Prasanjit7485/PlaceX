@@ -6,7 +6,11 @@ import {
   CheckCircle2,
   Sparkles,
   Layers,
-  Briefcase
+  Briefcase,
+  Building2,
+  ShieldCheck,
+  XCircle,
+  Clock3
 } from 'lucide-react';
 import type { Student, PlacementDrive } from '../../mockData';
 import { studentApi } from '../../api/studentApi';
@@ -32,13 +36,13 @@ export const StudentVisualizerView: React.FC<StudentVisualizerViewProps> = ({
       studentApi
         .getStageVisualizer(currentStudent.id)
         .then((data) => {
-          if (Array.isArray(data) && data.length > 0) {
+          if (Array.isArray(data)) {
             setRealVisualizer(data);
           }
         })
         .catch(() => {});
     }
-  }, [currentStudent?.id]);
+  }, [currentStudent?.id, selectedApplicationId]);
 
   const activeRealVisualizer = realVisualizer?.filter(
     (v) => String(v.jobPostingId) === selectedApplicationId
@@ -98,20 +102,72 @@ export const StudentVisualizerView: React.FC<StudentVisualizerViewProps> = ({
 
   return (
     <div className="flex flex-col gap-7 animate-fade-in pb-8">
-      {/* Top Page Banner */}
-      <div className="sp-page-header">
-        <div>
-          <div className="flex items-center gap-2 mb-1.5">
+      {/* Top Welcoming Hero Banner */}
+      <div className="glass-card p-6 sm:p-8 rounded-3xl border border-blue-100 bg-gradient-to-r from-blue-50/90 via-indigo-50/40 to-white shadow-xs flex flex-col gap-4">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-2">
             <span className="sp-badge sp-badge-primary font-bold flex items-center gap-1.5 shadow-2xs">
-              <Sparkles size={13} /> Real-Time Stage Tracker
+              <Sparkles size={13} /> Synchronized Live Tracker
             </span>
           </div>
-          <h1 className="sp-page-title text-2xl sm:text-3xl font-extrabold tracking-tight">
-            <TrendingUp size={28} className="text-blue-600 shrink-0" />
-            Recruitment Stage Visualizer
-          </h1>
-          <p className="sp-page-subtitle">
-            Track round-by-round selection progress, active interview stages, and evaluation feedback.
+
+          <div className="px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-blue-800 text-xs font-extrabold flex items-center gap-2 shadow-2xs">
+            <Clock3 size={14} className="text-blue-600" />
+            <span>Active Student Pipeline View</span>
+          </div>
+        </div>
+
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 mt-1">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-display tracking-tight flex items-center gap-3">
+              <TrendingUp size={28} className="text-blue-600 shrink-0" />
+              Recruitment Stage Visualizer
+            </h1>
+            <p className="text-slate-600 text-xs sm:text-sm max-w-2xl leading-relaxed font-medium mt-1">
+              Track round-by-round selection progress, active interview stages, and evaluation feedback directly from the institutional placement board.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* KPI Cards Summary Bar */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        <div className="sp-kpi-card" style={{ '--kpi-accent': '#2563EB' } as React.CSSProperties}>
+          <div className="sp-kpi-header">
+            <span className="sp-kpi-label">Applied Drives</span>
+            <div className="sp-kpi-icon bg-blue-50 text-blue-600">
+              <Building2 size={22} />
+            </div>
+          </div>
+          <div className="sp-kpi-value">{totalApplied}</div>
+          <p className="text-xs text-slate-500 mt-2 font-medium">Active Placement Applications</p>
+        </div>
+
+        <div className="sp-kpi-card" style={{ '--kpi-accent': '#4F46E5' } as React.CSSProperties}>
+          <div className="sp-kpi-header">
+            <span className="sp-kpi-label">Current Pipeline Stage</span>
+            <div className="sp-kpi-icon bg-indigo-50 text-indigo-600">
+              <Layers size={22} />
+            </div>
+          </div>
+          <div className="sp-kpi-value font-mono">
+            Stage {isSelected ? rounds.length : currentRoundIdx + 1} / {rounds.length}
+          </div>
+          <p className="text-xs text-slate-500 mt-2 font-medium">Progress: {progressPercentage}% Complete</p>
+        </div>
+
+        <div className="sp-kpi-card" style={{ '--kpi-accent': isSelected ? '#10B981' : isRejected ? '#EF4444' : '#F59E0B' } as React.CSSProperties}>
+          <div className="sp-kpi-header">
+            <span className="sp-kpi-label">Selected Application Status</span>
+            <div className={`sp-kpi-icon ${isSelected ? 'bg-emerald-50 text-emerald-600' : isRejected ? 'bg-rose-50 text-rose-600' : 'bg-amber-50 text-amber-600'}`}>
+              {isSelected ? <ShieldCheck size={22} /> : isRejected ? <XCircle size={22} /> : <CheckCircle2 size={22} />}
+            </div>
+          </div>
+          <div className="sp-kpi-value text-xl font-display font-extrabold truncate">
+            {selectedApp?.status || 'Applied'}
+          </div>
+          <p className="text-xs text-slate-500 mt-2 font-medium">
+            {selectedDrive?.companyName || 'Campus Drive'}
           </p>
         </div>
       </div>
@@ -128,10 +184,10 @@ export const StudentVisualizerView: React.FC<StudentVisualizerViewProps> = ({
         </div>
       ) : (
         <div className="flex flex-col gap-6">
-          {/* Top Control Bar: Select Application to Track + Application Status */}
+          {/* Select Application Bar */}
           <div className="sp-visualizer-card p-7 sm:p-9 px-8 sm:px-11 flex flex-col md:flex-row md:items-center justify-between gap-6 border border-slate-200/90 shadow-md rounded-3xl bg-white mb-1">
             <div className="flex flex-col gap-2.5 max-w-xl w-full">
-              <label className="text-xs sm:text-sm font-extrabold text-slate-700 uppercase tracking-wider flex items-center gap-2.5 pl-1">
+              <label className="text-xs sm:text-sm font-extrabold text-slate-700 uppercase tracking-wider flex items-center gap-2.5 pl-1 font-display">
                 <Briefcase size={17} className="text-blue-600 shrink-0" />
                 Select Application to Track
               </label>
@@ -153,7 +209,7 @@ export const StudentVisualizerView: React.FC<StudentVisualizerViewProps> = ({
 
             {selectedApp && (
               <div className="flex flex-col md:items-end gap-2 shrink-0 pt-4 md:pt-0 border-t md:border-t-0 border-slate-100 pr-1">
-                <span className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider pl-1">
+                <span className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider pl-1 font-mono">
                   Application Status
                 </span>
                 <span
@@ -194,7 +250,7 @@ export const StudentVisualizerView: React.FC<StudentVisualizerViewProps> = ({
                         <h2 className="text-2xl sm:text-3xl font-black text-slate-900 font-display tracking-tight pl-1.5">
                           {selectedDrive.companyName}
                         </h2>
-                        <span className="px-4 py-1.5 rounded-full bg-blue-600 text-white font-mono font-bold text-xs sm:text-sm shadow-xs ml-1">
+                        <span className="px-4 py-1.5 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-mono font-bold text-xs sm:text-sm shadow-xs ml-1">
                           {selectedDrive.package || '16 LPA'}
                         </span>
                       </div>
@@ -213,7 +269,7 @@ export const StudentVisualizerView: React.FC<StudentVisualizerViewProps> = ({
                   </div>
                 </div>
 
-                {/* Overall Pipeline Progress bar with Margin */}
+                {/* Overall Pipeline Progress bar */}
                 <div className="flex flex-col gap-3 pt-5 border-t border-blue-100/70 mt-1 pl-1 pr-1">
                   <div className="flex justify-between items-center text-xs sm:text-sm font-extrabold text-slate-700 font-mono">
                     <span className="uppercase tracking-wider">Overall Pipeline Progress</span>
@@ -271,6 +327,8 @@ export const StudentVisualizerView: React.FC<StudentVisualizerViewProps> = ({
                           >
                             {isCompleted || isFinalSelected ? (
                               <CheckCircle2 size={20} />
+                            ) : isFinalRejected ? (
+                              <XCircle size={20} />
                             ) : (
                               index + 1
                             )}
@@ -302,7 +360,7 @@ export const StudentVisualizerView: React.FC<StudentVisualizerViewProps> = ({
                         </div>
 
                         <div className="flex flex-col gap-1.5 pl-1.5">
-                          <span className="text-[11px] font-extrabold uppercase tracking-widest text-slate-400 pl-0.5">
+                          <span className="text-[11px] font-extrabold uppercase tracking-widest text-slate-400 pl-0.5 font-mono">
                             Round {index + 1}
                           </span>
                           <h4 className="font-extrabold text-slate-900 text-base font-display leading-snug pl-0.5">
@@ -350,3 +408,4 @@ export const StudentVisualizerView: React.FC<StudentVisualizerViewProps> = ({
     </div>
   );
 };
+

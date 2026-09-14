@@ -129,8 +129,8 @@ export const StudentInterviewView: React.FC<StudentInterviewViewProps> = ({
       {/* Top Banner */}
       <div className="sp-page-header">
         <div>
-          <h1 className="sp-page-title">
-            <MessageSquare size={28} className="text-blue-600" />
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-display tracking-tight flex items-center gap-3">
+            <MessageSquare size={28} className="text-blue-600 shrink-0" />
             Mock Interview Simulator
           </h1>
           <p className="sp-page-subtitle">

@@ -7,11 +7,11 @@ import {
   MessageSquare,
   TrendingUp,
   User,
-  X,
-  GraduationCap
+  X
 } from 'lucide-react';
 import type { Student } from '../../mockData';
 import type { StudentTabType } from './StudentSidebar';
+import placedLogo from '../../assets/placed_logo.png';
 
 interface StudentMobileDrawerProps {
   isOpen: boolean;
@@ -47,14 +47,14 @@ export const StudentMobileDrawer: React.FC<StudentMobileDrawerProps> = ({
 
       {/* Sliding Mobile Drawer Panel */}
       <div className="sp-drawer-panel md:hidden">
-        {/* Header with PlaceX Brand & Always Visible Close Button (✕) */}
+        {/* Header with PlaceD Brand & Always Visible Close Button (✕) */}
         <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center font-extrabold shadow-md shadow-blue-500/20 shrink-0">
-              <GraduationCap size={22} />
+            <div className="w-10 h-10 rounded-xl bg-white text-white flex items-center justify-center border border-slate-200 shrink-0 p-1">
+              <img src={placedLogo} alt="PlaceD Logo" className="w-full h-full object-contain" />
             </div>
             <div>
-              <h3 className="font-extrabold text-slate-900 text-base font-display leading-tight tracking-tight">PlaceX</h3>
+              <h3 className="font-extrabold text-slate-900 text-base font-display leading-tight tracking-tight">PlaceD</h3>
               <p className="text-[10px] font-extrabold text-blue-600 uppercase tracking-widest mt-0.5">Student Portal</p>
             </div>
           </div>
@@ -126,7 +126,7 @@ export const StudentMobileDrawer: React.FC<StudentMobileDrawerProps> = ({
 
         {/* Footer */}
         <div className="p-4 border-t border-slate-100 bg-slate-50/50 text-center">
-          <p className="text-[11px] font-semibold text-slate-400">PlaceX Campus Recruitment Suite</p>
+          <p className="text-[11px] font-semibold text-slate-400">PlaceD Campus Recruitment Suite</p>
         </div>
       </div>
     </>

@@ -1,5 +1,4 @@
 import type { CalendarEvent } from "../../api/types";
-import { INITIAL_CALENDAR_EVENTS } from "../../mockCalendar";
 import { Calendar, MapPin, Clock, Building2, Sparkles, CheckCircle2 } from "lucide-react";
 import { getEventColor } from "./calendarUtils";
 
@@ -9,7 +8,7 @@ interface UpcomingEventsProps {
 }
 
 export default function UpcomingEvents({ events, onSelectEvent }: UpcomingEventsProps) {
-  const displayEvents = events && events.length > 0 ? events : INITIAL_CALENDAR_EVENTS;
+  const displayEvents = events || [];
 
   return (
     <div className="glass-card p-6 sm:p-7 rounded-2xl border border-slate-200 bg-white shadow-xs flex flex-col gap-6">

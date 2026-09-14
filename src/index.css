@@ -196,7 +196,7 @@ h6 {
   line-height: 2rem;
   font-weight: 800;
   color: #0f172a; /* slate-900 */
-  font-family: var(--font-display, inherit);
+  font-family: var(--font-display, 'Outfit', sans-serif);
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -205,7 +205,7 @@ h6 {
 
 @media (min-width: 640px) {
   .sp-page-title {
-    font-size: 1.75rem; /* 28px */
+    font-size: 1.875rem; /* 30px - text-3xl */
     line-height: 2.25rem;
   }
 }

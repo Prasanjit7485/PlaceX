@@ -2,7 +2,7 @@ import React, {
   useMemo,
   useState
 } from 'react';
-import { Briefcase, AlertCircle, Lock, Award } from 'lucide-react';
+import { Briefcase, AlertCircle, Lock, Award, CheckCircle2 } from 'lucide-react';
 import type { Student, PlacementDrive } from '../../mockData';
 
 interface StudentDrivesViewProps {
@@ -19,103 +19,103 @@ export const StudentDrivesView: React.FC<StudentDrivesViewProps> = ({
   const isPlaced = currentStudent.placementStatus === 'Placed';
 
   const [
-  selectedRecruitmentType,
-  setSelectedRecruitmentType
-] = useState<
-  'ON_CAMPUS' | 'OFF_CAMPUS'
->('ON_CAMPUS');
+    selectedRecruitmentType,
+    setSelectedRecruitmentType
+  ] = useState<
+    'ON_CAMPUS' | 'OFF_CAMPUS'
+  >('ON_CAMPUS');
 
-const [
-  selectedRole,
-  setSelectedRole
-] = useState('ALL');
+  const [
+    selectedRole,
+    setSelectedRole
+  ] = useState('ALL');
 
-const normalizedRecruitmentType = (
-  type:
-    | 'CAMPUS'
-    | 'ON_CAMPUS'
-    | 'OFF_CAMPUS'
-) => {
-  return type === 'CAMPUS'
-    ? 'ON_CAMPUS'
-    : type;
-};
+  const normalizedRecruitmentType = (
+    type:
+      | 'CAMPUS'
+      | 'ON_CAMPUS'
+      | 'OFF_CAMPUS'
+  ) => {
+    return type === 'CAMPUS'
+      ? 'ON_CAMPUS'
+      : type;
+  };
 
-const availableRoles = useMemo(() => {
+  const availableRoles = useMemo(() => {
 
-  const roles = drives
-    .filter(
-      (drive) =>
+    const roles = drives
+      .filter(
+        (drive) =>
+          normalizedRecruitmentType(
+            drive.recruitmentType
+          ) === selectedRecruitmentType
+      )
+      .map(
+        (drive) =>
+          drive.roleCategory ||
+          drive.role ||
+          drive.title
+      )
+      .filter(Boolean);
+
+    return [
+      'ALL',
+      ...Array.from(
+        new Set(roles)
+      ).sort()
+    ];
+
+  }, [
+    drives,
+    selectedRecruitmentType
+  ]);
+
+  const filteredDrives = useMemo(() => {
+
+    return drives.filter((drive) => {
+
+      const type =
         normalizedRecruitmentType(
           drive.recruitmentType
-        ) === selectedRecruitmentType
-    )
-    .map(
-      (drive) =>
+        );
+
+      const matchesType =
+        type ===
+        selectedRecruitmentType;
+
+      const role =
         drive.roleCategory ||
         drive.role ||
-        drive.title
-    )
-    .filter(Boolean);
+        drive.title;
 
-  return [
-    'ALL',
-    ...Array.from(
-      new Set(roles)
-    ).sort()
-  ];
+      const matchesRole =
+        selectedRole === 'ALL' ||
+        role === selectedRole;
 
-}, [
-  drives,
-  selectedRecruitmentType
-]);
-
-const filteredDrives = useMemo(() => {
-
-  return drives.filter((drive) => {
-
-    const type =
-      normalizedRecruitmentType(
-        drive.recruitmentType
+      return (
+        matchesType &&
+        matchesRole
       );
+    });
 
-    const matchesType =
-      type ===
-      selectedRecruitmentType;
-
-    const role =
-      drive.roleCategory ||
-      drive.role ||
-      drive.title;
-
-    const matchesRole =
-      selectedRole === 'ALL' ||
-      role === selectedRole;
-
-    return (
-      matchesType &&
-      matchesRole
-    );
-  });
-
-}, [
-  drives,
-  selectedRecruitmentType,
-  selectedRole
-]);
+  }, [
+    drives,
+    selectedRecruitmentType,
+    selectedRole
+  ]);
 
   // Core Smart Compatibility Math (EXACT UNTOUCHED ALGORITHM)
   const getCompatibility = (student: Student, drive: PlacementDrive) => {
 
     if (
-  drive.recruitmentType === 'OFF_CAMPUS'
-) {
-  return {
-    eligible: true,
-    score: 0,
-    matchingSkills: []
-  };
-}
+      drive.recruitmentType === 'OFF_CAMPUS'
+    ) {
+      return {
+        eligible: true,
+        score: 0,
+        matchingSkills: []
+      };
+    }
     const cgpaCutoff = drive.cgpaCutoff ?? 0;
     const isGpaEligible = student.cgpa >= cgpaCutoff;
     const isBacklogEligible = student.backlogs <= (drive.maxBacklogs ?? 0);
@@ -152,12 +152,12 @@ const filteredDrives = useMemo(() => {
       {/* Drives Top Header Banner */}
       <div className="sp-page-header">
         <div>
-          <h1 className="sp-page-title">
-            <Briefcase size={28} className="text-blue-600" />
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-display tracking-tight flex items-center gap-3">
+            <Briefcase size={28} className="text-blue-600 shrink-0" />
             {selectedRecruitmentType === 'ON_CAMPUS'
-  ? 'On-Campus Placement Drives'
-  : 'Off-Campus Jobs'}{' '}
-({filteredDrives.length})
+              ? 'On-Campus Placement Drives'
+              : 'Off-Campus Jobs'}{' '}
+            ({filteredDrives.length})
           </h1>
           <p className="sp-page-subtitle">
             Real-time candidate compatibility match score calculated against corporate criteria.
@@ -172,78 +172,66 @@ const filteredDrives = useMemo(() => {
         )}
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
+      {/* Recruitment Controls & Role Filters */}
+      <div className="flex flex-wrap items-center justify-between gap-3.5 bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/90 shadow-2xs">
+        <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedRecruitmentType('ON_CAMPUS');
+              setSelectedRole('ALL');
+            }}
+            className={`px-5 py-2.5 rounded-xl font-extrabold text-xs sm:text-sm transition-all cursor-pointer ${
+              selectedRecruitmentType === 'ON_CAMPUS'
+                ? 'bg-blue-600 text-white shadow-md'
+                : 'bg-slate-50 text-slate-700 border border-slate-200/90 hover:bg-slate-100'
+            }`}
+          >
+            On Campus
+          </button>
 
-  <button
-    type="button"
-    onClick={() => {
-      setSelectedRecruitmentType(
-        'ON_CAMPUS'
-      );
-      setSelectedRole('ALL');
-    }}
-    className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${
-      selectedRecruitmentType === 'ON_CAMPUS'
-        ? 'bg-blue-600 text-white shadow-md'
-        : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
-    }`}
-  >
-    On Campus
-  </button>
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedRecruitmentType('OFF_CAMPUS');
+              setSelectedRole('ALL');
+            }}
+            className={`px-5 py-2.5 rounded-xl font-extrabold text-xs sm:text-sm transition-all cursor-pointer ${
+              selectedRecruitmentType === 'OFF_CAMPUS'
+                ? 'bg-blue-600 text-white shadow-md'
+                : 'bg-slate-50 text-slate-700 border border-slate-200/90 hover:bg-slate-100'
+            }`}
+          >
+            Off Campus
+          </button>
+        </div>
 
-  <button
-    type="button"
-    onClick={() => {
-      setSelectedRecruitmentType(
-        'OFF_CAMPUS'
-      );
-      setSelectedRole('ALL');
-    }}
-    className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${
-      selectedRecruitmentType === 'OFF_CAMPUS'
-        ? 'bg-blue-600 text-white shadow-md'
-        : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
-    }`}
-  >
-    Off Campus
-  </button>
+        <div className="flex items-center gap-3 w-full sm:w-auto pt-2.5 sm:pt-0 border-t sm:border-t-0 border-slate-100">
+          <label className="text-xs sm:text-sm font-extrabold text-slate-600 shrink-0 uppercase tracking-wider">
+            Role
+          </label>
 
-  <div className="ml-auto flex items-center gap-2">
-
-    <label className="text-sm font-bold text-slate-600">
-      Role
-    </label>
-
-    <select
-      value={selectedRole}
-      onChange={(e) =>
-        setSelectedRole(
-          e.target.value
-        )
-      }
-      className="input-field min-w-55"
-    >
-      {availableRoles.map((role) => (
-        <option
-          key={role}
-          value={role}
-        >
-          {role === 'ALL'
-            ? 'All Roles'
-            : role}
-        </option>
-      ))}
-    </select>
-
-  </div>
-
-</div>
+          <select
+            value={selectedRole}
+            onChange={(e) => setSelectedRole(e.target.value)}
+            className="input-field min-w-44 sm:min-w-56 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-slate-50/80 border border-slate-200/90 cursor-pointer"
+          >
+            {availableRoles.map((role) => (
+              <option key={role} value={role}>
+                {role === 'ALL' ? 'All Roles' : role}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
 
       {/* Drives Grid */}
       <div className="flex flex-col gap-6">
         {filteredDrives.map((drive) => {
           const matchResult = getCompatibility(currentStudent, drive);
-          const hasApplied = currentStudent.applications.some((a) => a.driveId === drive.id);
+          const hasApplied = currentStudent.applications.some(
+            (a) => String(a.driveId) === String(drive.id) || String(a.jobPostingId) === String(drive.id)
+          );
           const application = currentStudent.applications.find((a) => a.driveId === drive.id);
 
           return (
@@ -439,11 +427,20 @@ const filteredDrives = useMemo(() => {
                           ? `Apply on ${drive.source || 'Job Portal'}`
                           : 'Application Link Unavailable'}
                       </button>
+                    ) : hasApplied ? (
+                      <button
+                        type="button"
+                        disabled
+                        className="btn h-11 w-full rounded-xl text-xs font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200 cursor-not-allowed opacity-90 flex items-center justify-center gap-1.5 shadow-2xs"
+                      >
+                        <CheckCircle2 size={16} />
+                        Applied
+                      </button>
                     ) : (
                       <button
                         type="button"
                         onClick={() => onApply(drive.id)}
-                        className="btn btn-primary h-11 w-full rounded-xl text-xs font-bold shadow-md"
+                        className="btn btn-primary h-11 w-full rounded-xl text-xs font-extrabold shadow-md cursor-pointer"
                       >
                         Apply Now
                       </button>

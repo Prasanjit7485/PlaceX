@@ -21,15 +21,11 @@ import { FeaturesPage } from './components/FeaturesPage';
 import { HowItWorksPage } from './components/HowItWorksPage';
 
 import { Notification } from './components/Notification';
+import { NotificationBell } from './components/student/NotificationBell';
 import { RouteLoadingBar } from './components/RouteLoadingBar';
+import placedLogo from './assets/placed_logo.png';
 
 import type { ToastType } from './components/Notification';
-
-import {
-  INITIAL_STUDENTS,
-  INITIAL_DRIVES,
-  INITIAL_RECRUITERS,
-} from './mockData';
 
 import type {
   Student,
@@ -38,8 +34,6 @@ import type {
   Recruiter,
   ResumeFeedback,
 } from './mockData';
-
-import { INITIAL_CALENDAR_EVENTS } from './mockCalendar';
 
 import type {
   CalendarEvent,
@@ -50,7 +44,8 @@ import {
   type Alumni,
   type Blog,
   type Referral,
-  type AlumniRegistrationRequest
+  type AlumniRegistrationRequest,
+  type AlumniProfileRequest
 } from './api/alumniApi';
 
 import { studentApi } from './api/studentApi';
@@ -60,7 +55,6 @@ import { calendarApi } from './api/calendarApi';
 import { applicationApi } from './api/applicationApi';
 
 import {
-  GraduationCap,
   LogOut,
   Shield,
   Building2,
@@ -242,39 +236,23 @@ function AppContent() {
      STUDENTS
   ======================================================= */
 
-  const [students, setStudents] =
-    useState<Student[]>(() => {
-      const saved =
-        localStorage.getItem('tpo_students');
+  /* =======================================================
+     STUDENTS
+  ======================================================= */
 
-      return saved
-        ? JSON.parse(saved)
-        : [];
-    });
-
+  const [students, setStudents] = useState<Student[]>([]);
 
   /* =======================================================
      PLACEMENT DRIVES
   ======================================================= */
 
-  const [drives, setDrives] =
-  useState<PlacementDrive[]>([]);
-
+  const [drives, setDrives] = useState<PlacementDrive[]>([]);
 
   /* =======================================================
      RECRUITERS
   ======================================================= */
 
-  const [recruiters, setRecruiters] =
-    useState<Recruiter[]>(() => {
-      const saved =
-        localStorage.getItem('tpo_recruiters');
-
-      return saved
-        ? JSON.parse(saved)
-        : [];
-    });
-
+  const [recruiters, setRecruiters] = useState<Recruiter[]>([]);
 
   /* =======================================================
      ALUMNI
@@ -282,274 +260,188 @@ function AppContent() {
 
   const [alumni, setAlumni] = useState<Alumni[]>([]);
 
-
   /* =======================================================
      ALUMNI BLOGS
   ======================================================= */
 
   const [blogs, setBlogs] = useState<Blog[]>([]);
 
-
   /* =======================================================
      ALUMNI REFERRALS
   ======================================================= */
 
-  const [referrals, setReferrals] =
-  useState<Referral[]>([]);
+  const [referrals, setReferrals] = useState<Referral[]>([]);
+
+  /* =======================================================
+     CALENDAR EVENTS
+  ======================================================= */
+
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
+
+  /* =======================================================
+     SESSION & RESTORATION
+  ======================================================= */
+
+  const [session, setSession] = useState<Session | null>(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const storedRole = localStorage.getItem('role');
+
+    if (token && storedRole) {
+      const roleLower = storedRole.toLowerCase();
+      const mappedRole: UserRole =
+        roleLower === 'student'
+          ? 'student'
+          : roleLower === 'recruiter'
+          ? 'recruiter'
+          : roleLower === 'alumni'
+          ? 'alumni'
+          : 'admin';
+
+      setSession({ role: mappedRole });
+    }
+  }, []);
 
   useEffect(() => {
     const loadBackendData = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
       try {
         const [
           alumniData,
           blogsData,
-          referralsData,
           studentsWithPlacement,
           drivesWithCompany,
           recruitersList,
-          eventsList
+          eventsList,
+          applicationsList
         ] = await Promise.all([
           alumniApi.getAll().catch(() => []),
           alumniApi.getBlogs().catch(() => []),
-          alumniApi.getReferrals().catch(() => []),
           studentApi.getAllWithPlacementInfo().catch(() => []),
           jobPostingApi.getAllWithCompanyInfo().catch(() => []),
           recruiterApi.getAll().catch(() => []),
           calendarApi.getAll().catch(() => []),
+          applicationApi.getAll().catch(() => []),
         ]);
 
-        if (alumniData.length > 0) setAlumni(alumniData);
-        if (blogsData.length > 0) setBlogs(blogsData);
-        if (referralsData.length > 0) setReferrals(referralsData);
+        setAlumni(alumniData);
+        setBlogs(blogsData);
 
-        if (studentsWithPlacement.length > 0) {
-          const mappedStudents: Student[] = studentsWithPlacement.map((s) => ({
-            id: s.id,
-            name: s.name,
-            email: s.email,
-            registrationNumber: s.id,
-            password: 'password123',
-            branch: s.department,
-            cgpa: s.cgpa,
-            backlogs: s.backlogs,
-            placementStatus: s.placementStatus,
-            placedCompany: s.placedCompany,
-            placedPackage: s.placedPackage,
-            resumeScore: s.resumeScore || 85,
-            skills: ['Java', 'React', 'Spring Boot'],
-            projectsCount: s.projectsCount || 2,
-            resumeText: s.resumeText || '',
-            applications: [],
-            department: s.department,
-          }));
-          setStudents(mappedStudents);
+        const appsByStudent = new Map<string, Application[]>();
+        for (const app of applicationsList) {
+          const sId = String(app.studentId);
+          const currentApps = appsByStudent.get(sId) || [];
+          currentApps.push({
+            driveId: String(app.jobPostingId),
+            jobPostingId: String(app.jobPostingId),
+            companyName: app.companyName || '',
+            role: app.jobTitle || '',
+            appliedDate: app.appliedDate || '',
+            status: app.status === 'SHORTLISTED' ? 'Selected' : app.status === 'REJECTED' ? 'Rejected' : 'Applied',
+            currentRoundIndex: 0,
+          });
+          appsByStudent.set(sId, currentApps);
         }
 
-        if (drivesWithCompany.length > 0) {
-  const mappedDrives: PlacementDrive[] =
-    drivesWithCompany.map((d) => ({
-      id: d.id,
+        const mappedStudents: Student[] = studentsWithPlacement.map((s) => ({
+          id: s.id,
+          name: s.name,
+          email: s.email,
+          registrationNumber: s.id,
+          password: '',
+          branch: s.department,
+          cgpa: s.cgpa,
+          backlogs: s.backlogs,
+          placementStatus: s.placementStatus,
+          placedCompany: s.placedCompany,
+          placedPackage: s.placedPackage,
+          resumeScore: 85,
+          skills: [],
+          projectsCount: 0,
+          resumeText: '',
+          applications: appsByStudent.get(String(s.id)) || [],
+          department: s.department,
+        }));
+        setStudents(mappedStudents);
 
-      companyName:
-        d.companyName,
+        const mappedDrives: PlacementDrive[] = drivesWithCompany.map((d) => ({
+          id: d.id,
+          companyName: d.companyName,
+          companyId: d.companyId,
+          role: d.roleCategory || d.title,
+          title: d.title,
+          description: d.description,
+          jobDesc: d.description || '',
+          package: d.package,
+          numericPackage: d.numericPackage,
+          cgpaCutoff: d.cgpaCutoff,
+          maxBacklogs: d.maxBacklogs,
+          allowedBranches: d.allowedBranches,
+          eligibleBatch: d.eligibleBatch,
+          deadline: d.deadline ?? null,
+          location: d.location,
+          skillsRequired: d.skillsRequired,
+          status: d.status,
+          registeredCount: d.registeredCount,
+          rounds: d.recruitmentType === 'OFF_CAMPUS' ? [] : ['Online Assessment', 'Technical Interview', 'HR Interview'],
+          recruitmentType: d.recruitmentType === 'CAMPUS' ? 'CAMPUS' : d.recruitmentType,
+          sourceType: d.sourceType,
+          applyUrl: d.applyUrl,
+          source: d.source,
+          postedAt: d.postedAt,
+          jobType: d.jobType,
+          roleCategory: d.roleCategory,
+          scrapedDate: d.scrapedDate,
+        }));
+        setDrives(mappedDrives);
 
-      companyId:
-        d.companyId,
+        const mappedRecruiters: Recruiter[] = recruitersList.map((r) => ({
+          id: String(r.id),
+          name: r.name,
+          email: r.email,
+          password: '',
+          companyName: r.companyName,
+          companyId: r.id,
+          designation: r.designation || 'Recruiter',
+          industry: r.industry || 'Technology',
+          postedDrives: [],
+        }));
+        setRecruiters(mappedRecruiters);
 
-      role:
-        d.roleCategory ||
-        d.title,
-
-      title:
-        d.title,
-
-      description:
-        d.description,
-
-      jobDesc:
-        d.description || '',
-
-      package:
-        d.package,
-
-      numericPackage:
-        d.numericPackage,
-
-      /*
-       * These remain null for
-       * OFF_CAMPUS.
-       */
-      cgpaCutoff:
-        d.cgpaCutoff,
-
-      maxBacklogs:
-        d.maxBacklogs,
-
-      allowedBranches:
-        d.allowedBranches,
-
-      eligibleBatch:
-        d.eligibleBatch,
-
-      deadline:
-        d.deadline ?? null,
-
-      location:
-        d.location,
-
-      skillsRequired:
-        d.skillsRequired,
-
-      status:
-        d.status,
-
-      registeredCount:
-        d.registeredCount,
-
-      rounds:
-        d.recruitmentType === 'OFF_CAMPUS'
-          ? []
-          : [
-              'Online Assessment',
-              'Technical Interview',
-              'HR Interview'
-            ],
-
-      recruitmentType:
-        d.recruitmentType === 'CAMPUS'
-          ? 'CAMPUS'
-          : d.recruitmentType,
-
-      sourceType:
-        d.sourceType,
-
-      applyUrl:
-        d.applyUrl,
-
-      source:
-        d.source,
-
-      postedAt:
-        d.postedAt,
-
-      jobType:
-        d.jobType,
-
-      roleCategory:
-        d.roleCategory,
-
-      scrapedDate:
-        d.scrapedDate,
-    }));
-
-  setDrives(mappedDrives);
-}
-        if (recruitersList.length > 0) {
-          const mappedRecruiters: Recruiter[] = recruitersList.map((r) => ({
-            id: String(r.id),
-            name: r.name,
-            email: r.email,
-            password: 'password123',
-            companyName: r.companyName,
-            companyId: r.id,
-            designation: r.designation || 'Technical Recruiter',
-            industry: r.industry || 'IT Services',
-            postedDrives: []
-          }));
-          setRecruiters(mappedRecruiters);
-        }
-
-        if (eventsList.length > 0) {
-          setCalendarEvents(eventsList);
-        }
+        setCalendarEvents(eventsList);
       } catch (error) {
         console.error('Failed to load initial backend data:', error);
       }
     };
 
     loadBackendData();
-  }, []);
-
-
-  /* =======================================================
-     CALENDAR EVENTS
-  ======================================================= */
-
-  const [calendarEvents, setCalendarEvents] =
-    useState<CalendarEvent[]>(
-      INITIAL_CALENDAR_EVENTS
-    );
-
-
-  /* =======================================================
-     SESSION
-  ======================================================= */
-
-  const [session, setSession] =
-    useState<Session | null>(null);
-
+  }, [session]);
 
   /* =======================================================
      TOAST
   ======================================================= */
 
-  const [toast, setToast] =
-    useState<ToastType | null>(null);
-
-
-  /* =======================================================
-     TOAST HELPER
-  ======================================================= */
+  const [toast, setToast] = useState<ToastType | null>(null);
 
   const triggerToast = (
     message: string,
-    type:
-      | 'success'
-      | 'error'
-      | 'warning'
-      | 'info'
+    type: 'success' | 'error' | 'warning' | 'info'
   ) => {
     setToast({
-      id: Math.random()
-        .toString(36)
-        .substring(2, 11),
+      id: Math.random().toString(36).substring(2, 11),
       message,
       type,
     });
   };
 
-
-  /* =======================================================
-     LOCAL STORAGE
-  ======================================================= */
-
-  useEffect(() => {
-    localStorage.setItem(
-      'tpo_students',
-      JSON.stringify(students)
-    );
-  }, [students]);
-
-
-  useEffect(() => {
-    localStorage.setItem(
-      'tpo_drives',
-      JSON.stringify(drives)
-    );
-  }, [drives]);
-
-
-  useEffect(() => {
-    localStorage.setItem(
-      'tpo_recruiters',
-      JSON.stringify(recruiters)
-    );
-  }, [recruiters]);
-
   useEffect(() => {
     const handleUnauthorized = () => {
       localStorage.removeItem('token');
-      localStorage.removeItem('placex_session');
+      localStorage.removeItem('role');
+      localStorage.removeItem('placed_session');
       setSession(null);
       triggerToast('Session expired or unauthorized. Please log in again.', 'warning');
       navigate('/auth?mode=login');
@@ -561,23 +453,8 @@ function AppContent() {
     };
   }, [navigate]);
 
-
-  
-
-
-  /* =======================================================
-     SEED DATA
-  ======================================================= */
-
   const handleSeedData = () => {
-    setStudents(INITIAL_STUDENTS);
-    setDrives(INITIAL_DRIVES);
-    setRecruiters(INITIAL_RECRUITERS);
-
-    triggerToast(
-      'Sample data seeded successfully. Feel free to log in!',
-      'success'
-    );
+    triggerToast('Seed operation is deprecated. Data comes from backend.', 'info');
   };
 
 
@@ -657,21 +534,6 @@ function AppContent() {
         triggerToast(
           'Alumni account not found.',
           'error'
-        );
-
-        return;
-      }
-
-      /*
-       * Alumni must be approved by TPO
-       * before portal access.
-       */
-      if (
-        alum.alumniStatus !== 'APPROVED'
-      ) {
-        triggerToast(
-          'Your Alumni account is awaiting TPO approval.',
-          'warning'
         );
 
         return;
@@ -779,7 +641,8 @@ function AppContent() {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    localStorage.removeItem('placex_session');
+    localStorage.removeItem('role');
+    localStorage.removeItem('placed_session');
     setSession(null);
 
     triggerToast(
@@ -1043,7 +906,7 @@ function AppContent() {
     const createdDrive =
       await jobPostingApi.createDrive(
         newDriveData.companyName,
-        newDriveData.location || '',
+        newDriveData.location || 'Campus / Remote',
         undefined,
         requestData
       );
@@ -1371,8 +1234,26 @@ function AppContent() {
 
 
   /* =======================================================
-     PROMOTE STUDENT IN PLACEMENT PIPELINE
+     PROMOTE STUDENT (MOVE ROUND / SELECT)
   ======================================================= */
+
+  function getDefaultFutureLocalDateTime(hoursAhead = 24): string {
+    const date = new Date(Date.now() + hoursAhead * 60 * 60 * 1000);
+    const pad = (value: number) => String(value).padStart(2, "0");
+    return (
+      [
+        date.getFullYear(),
+        pad(date.getMonth() + 1),
+        pad(date.getDate()),
+      ].join("-") +
+      "T" +
+      [
+        pad(date.getHours()),
+        pad(date.getMinutes()),
+        pad(date.getSeconds()),
+      ].join(":")
+    );
+  }
 
   const handlePromoteStudent = (
     studentId: string,
@@ -1380,136 +1261,70 @@ function AppContent() {
     newRoundIndex: number,
     isFinalSelection: boolean
   ) => {
+    const student = students.find((item) => item.id === studentId);
+    const drive = drives.find((item) => item.id === driveId);
 
-    const student =
-      students.find(
-        (item) =>
-          item.id === studentId
-      );
+    if (!student || !drive) return;
 
-    const drive =
-      drives.find(
-        (item) =>
-          item.id === driveId
-      );
+    setStudents((previousStudents) =>
+      previousStudents.map((studentItem) => {
+        if (studentItem.id !== studentId) return studentItem;
 
-    if (!student || !drive) {
-      return;
-    }
+        const updatedApplications = studentItem.applications.map((application) => {
+          if (application.jobPostingId !== driveId) return application;
 
-
-    setStudents(
-      (previousStudents) =>
-        previousStudents.map(
-          (studentItem) => {
-
-            if (
-              studentItem.id !==
-              studentId
-            ) {
-              return studentItem;
-            }
-
-
-            const updatedApplications =
-              studentItem.applications.map(
-                (application) => {
-
-                  if (
-                    application.jobPostingId !==
-                    driveId
-                  ) {
-                    return application;
-                  }
-
-
-                  /*
-                   * Final selection.
-                   */
-
-                  if (
-                    isFinalSelection
-                  ) {
-                    return {
-                      ...application,
-
-                      status:
-                        'Selected' as const,
-
-                      currentRoundIndex:
-                        newRoundIndex - 1,
-
-                      feedback:
-                        `Offer issued! Selected for the role of ${drive.title} with a salary package of ${drive.package}.`,
-                    };
-                  }
-
-
-                  /*
-                   * Move to next round.
-                   */
-
-                  const nextRoundName =
-                    drive.rounds
-                      ? drive.rounds[
-                          newRoundIndex
-                        ]
-                      : `Round ${
-                          newRoundIndex + 1
-                        }`;
-
-                  return {
-                    ...application,
-
-                    status:
-                      nextRoundName as any,
-
-                    currentRoundIndex:
-                      newRoundIndex,
-
-                    feedback:
-                      `Successfully cleared stage. Promoted to "${nextRoundName}".`,
-                  };
-                }
-              );
-
-
-            /*
-             * If selected, update
-             * student's placement details.
-             */
-
-            if (
-              isFinalSelection
-            ) {
-              return {
-                ...studentItem,
-
-                placementStatus:
-                  'Placed' as const,
-
-                placedCompany:
-                  drive.companyName,
-
-                placedPackage:
-                  String(drive.package),
-
-                applications:
-                  updatedApplications,
-              };
-            }
-
-
+          if (isFinalSelection) {
             return {
-              ...studentItem,
-
-              applications:
-                updatedApplications,
+              ...application,
+              status: 'Selected' as const,
+              currentRoundIndex: newRoundIndex - 1,
+              feedback: `Offer issued! Selected for the role of ${drive.title} with a salary package of ${drive.package}.`,
             };
           }
-        )
+
+          return {
+            ...application,
+            status: 'Applied' as const,
+            currentRoundIndex: newRoundIndex,
+            feedback: `Promoted to ${drive.rounds?.[newRoundIndex] || `Round ${newRoundIndex + 1}`}`,
+          };
+        });
+
+        return {
+          ...studentItem,
+          applications: updatedApplications,
+        };
+      })
     );
 
+    // Persist to real backend REST API
+    applicationApi
+      .getAll()
+      .then((allApps) => {
+        const realApp = allApps.find(
+          (a) =>
+            String(a.studentId) === String(studentId) &&
+            String(a.jobPostingId) === String(driveId)
+        );
+        if (realApp) {
+          if (isFinalSelection) {
+            applicationApi.updateStatus(realApp.id, 'SELECTED').catch(() => {});
+          } else {
+            applicationApi.updateStatus(realApp.id, 'SHORTLISTED').catch(() => {});
+            const roundName = drive.rounds?.[newRoundIndex] || `Round ${newRoundIndex + 1}`;
+            applicationApi
+              .addRound(realApp.id, {
+                roundNumber: newRoundIndex + 1,
+                roundType: roundName,
+                scheduledAt: getDefaultFutureLocalDateTime(24),
+              })
+              .catch((err) => {
+                console.error('Failed to add interview round:', err);
+              });
+          }
+        }
+      })
+      .catch(() => {});
 
     if (isFinalSelection) {
       triggerToast(
@@ -1524,76 +1339,49 @@ function AppContent() {
     }
   };
 
-
   /* =======================================================
      REJECT STUDENT
   ======================================================= */
 
-  const handleRejectStudent = (
-    studentId: string,
-    driveId: string
-  ) => {
+  const handleRejectStudent = (studentId: string, driveId: string) => {
+    const student = students.find((item) => item.id === studentId);
+    const drive = drives.find((item) => item.id === driveId);
 
-    const student =
-      students.find(
-        (item) =>
-          item.id === studentId
-      );
+    if (!student || !drive) return;
 
-    const drive =
-      drives.find(
-        (item) =>
-          item.id === driveId
-      );
+    setStudents((previousStudents) =>
+      previousStudents.map((studentItem) => {
+        if (studentItem.id !== studentId) return studentItem;
 
-    if (!student || !drive) {
-      return;
-    }
-
-
-    setStudents(
-      (previousStudents) =>
-        previousStudents.map(
-          (studentItem) => {
-
-            if (
-              studentItem.id !==
-              studentId
-            ) {
-              return studentItem;
-            }
-
+        return {
+          ...studentItem,
+          applications: studentItem.applications.map((application) => {
+            if (application.jobPostingId !== driveId) return application;
 
             return {
-              ...studentItem,
-
-              applications:
-                studentItem.applications.map(
-                  (application) => {
-
-                    if (
-                      application.jobPostingId !==
-                      driveId
-                    ) {
-                      return application;
-                    }
-
-                    return {
-                      ...application,
-
-                      status:
-                        'Rejected' as const,
-
-                      feedback:
-                        `Recruitment cycle concluded at stage "${drive.rounds?.[application.currentRoundIndex] || 'Current Stage'}". Better luck next time!`,
-                    };
-                  }
-                ),
+              ...application,
+              status: 'Rejected' as const,
+              feedback: `Recruitment cycle concluded at stage "${drive.rounds?.[application.currentRoundIndex] || 'Current Stage'}". Better luck next time!`,
             };
-          }
-        )
+          }),
+        };
+      })
     );
 
+    // Persist to real backend REST API
+    applicationApi
+      .getAll()
+      .then((allApps) => {
+        const realApp = allApps.find(
+          (a) =>
+            String(a.studentId) === String(studentId) &&
+            String(a.jobPostingId) === String(driveId)
+        );
+        if (realApp) {
+          applicationApi.updateStatus(realApp.id, 'REJECTED').catch(() => {});
+        }
+      })
+      .catch(() => {});
 
     triggerToast(
       `${student.name} marked as Rejected for ${drive.companyName}.`,
@@ -1634,13 +1422,13 @@ function AppContent() {
   const handleRegisterStudent = (
     newStudent: Student
   ) => {
-
-    setStudents(
-      (previousStudents) => [
-        ...previousStudents,
-        newStudent,
-      ]
-    );
+    setStudents((previousStudents) => {
+      const exists = previousStudents.some(
+        (s) => String(s.id).trim().toLowerCase() === String(newStudent.id).trim().toLowerCase()
+      );
+      if (exists) return previousStudents;
+      return [...previousStudents, newStudent];
+    });
 
     triggerToast(
       'Student registration successful! Please sign in.',
@@ -1676,35 +1464,58 @@ function AppContent() {
   ======================================================= */
 
   const handleRegisterAlumni = async (
-  requestData: AlumniRegistrationRequest
-): Promise<void> => {
-  try {
-    const createdAlumni = await alumniApi.register(
-      requestData
-    );
+    requestData: AlumniRegistrationRequest
+  ): Promise<void> => {
+    try {
+      const createdAlumni = await alumniApi.register(
+        requestData
+      );
 
-    setAlumni((previousAlumni) => [
-      ...previousAlumni,
-      createdAlumni
-    ]);
+      setAlumni((previousAlumni) => {
+        const filtered = previousAlumni.filter((a) => a.id !== createdAlumni.id);
+        return [...filtered, createdAlumni];
+      });
 
-    triggerToast(
-      'Alumni registration submitted. TPO approval is required before portal access.',
-      'success'
-    );
-  } catch (error) {
-    console.error(
-      'Failed to register alumni:',
-      error
-    );
+      triggerToast(
+        'Registration submitted. Please wait to be verified/approved by TPO before signing in.',
+        'info'
+      );
+    } catch (error) {
+      console.error(
+        'Failed to register alumni:',
+        error
+      );
 
-    throw new Error(
-      error instanceof Error
-        ? error.message
-        : 'Unable to register alumni.'
-    );
-  }
-};
+      throw new Error(
+        error instanceof Error
+          ? error.message
+          : 'Unable to register alumni.'
+      );
+    }
+  };
+
+  /* =======================================================
+     APPROVE RECRUITER (TPO ONLY)
+  ======================================================= */
+
+  const handleApproveRecruiter = async (
+    recruiterId: string | number
+  ): Promise<void> => {
+    try {
+      await recruiterApi.approve(Number(recruiterId));
+      setRecruiters((previous) =>
+        previous.map((r) =>
+          r.id === recruiterId || String(r.id) === String(recruiterId)
+            ? { ...r, recruiterStatus: 'APPROVED' }
+            : r
+        )
+      );
+      triggerToast('Recruiter account approved successfully.', 'success');
+    } catch (error) {
+      console.error('Failed to approve recruiter:', error);
+      triggerToast('Failed to approve recruiter account.', 'error');
+    }
+  };
 
   /* =======================================================
      APPROVE ALUMNI
@@ -1922,6 +1733,34 @@ function AppContent() {
     );
   }
 };
+
+  /* =======================================================
+     UPDATE ALUMNI PROFILE
+  ======================================================= */
+
+  const handleUpdateAlumniProfile = async (
+    id: string | number,
+    requestData: AlumniProfileRequest
+  ): Promise<void> => {
+    try {
+      await alumniApi.updateProfile(id, requestData);
+      setAlumni((previousAlumni) =>
+        previousAlumni.map((a) =>
+          String(a.id) === String(id)
+            ? {
+                ...a,
+                ...requestData,
+                linkedinUrl: requestData.linkedinUrl || requestData.linkedIn || a.linkedinUrl
+              }
+            : a
+        )
+      );
+      triggerToast('Alumni profile updated successfully.', 'success');
+    } catch (error) {
+      console.error('Failed to update alumni profile:', error);
+      triggerToast('Failed to update alumni profile.', 'error');
+    }
+  };
   /* =======================================================
      ADD REFERRAL
   ======================================================= */
@@ -2141,13 +1980,8 @@ const handleDeleteReferral = async (
 
       <header className="app-header">
 
-        <div className="app-logo">
-
-          <GraduationCap
-            className="logo-icon animate-pulse"
-            size={26}
-          />
-
+        <div className="app-logo flex items-center gap-2.5">
+          <img src={placedLogo} alt="PlaceD Logo" className="w-8 h-8 object-contain rounded-lg shrink-0" />
           <Link
             to="/"
             className="
@@ -2159,9 +1993,8 @@ const handleDeleteReferral = async (
               no-underline
             "
           >
-            PlaceX
+            PlaceD
           </Link>
-
         </div>
 
 
@@ -2179,6 +2012,8 @@ const handleDeleteReferral = async (
             loggedInStudent ? (
 
               <div className="flex items-center gap-3">
+
+                <NotificationBell studentId={loggedInStudent.id} />
 
                 <div className="hidden sm:flex flex-col text-right">
 
@@ -2276,22 +2111,21 @@ const handleDeleteReferral = async (
 
                   <span className="
                     text-[10px]
-                    text-amber-600
+                    text-blue-600
                     font-bold
                     uppercase
                     tracking-wider
                   ">
-                    {loggedInAlumni.currentCompany}
-                    {' '}Alumni
+                    {loggedInAlumni.currentCompany || 'Verified'} Alumni
                   </span>
 
                 </div>
 
                 <div className="
                   avatar
-                  bg-linear-to-br
-                  from-amber-400
-                  to-orange-600
+                  bg-gradient-to-br
+                  from-blue-600
+                  to-indigo-600
                 ">
                   <Award
                     size={16}
@@ -2637,6 +2471,12 @@ const handleDeleteReferral = async (
                     saveFeedback
                   }
 
+                  recruiters={recruiters}
+
+                  onApproveRecruiter={
+                    handleApproveRecruiter
+                  }
+
                   onApproveAlumni={
                     handleApproveAlumni
                   }
@@ -2668,27 +2508,19 @@ const handleDeleteReferral = async (
                 {loggedInAlumni ? (
 
                   <AlumniPortal
-
                     alumni={loggedInAlumni}
-
+                    allAlumni={alumni}
                     blogs={blogs}
-
                     referrals={referrals}
-
                     onLogout={handleLogout}
-
+                    onUpdateProfile={handleUpdateAlumniProfile}
                     onCreateBlog={handleAddBlog}
-
                     onUpdateBlog={handleUpdateBlog}
-
                     onDeleteBlog={handleDeleteBlog}
-
                     onCreateReferral={handleAddReferral}
-                       onUpdateReferral={handleUpdateReferral}
-                      onDeleteReferral={handleDeleteReferral}
- 
-
-                    />
+                    onUpdateReferral={handleUpdateReferral}
+                    onDeleteReferral={handleDeleteReferral}
+                  />
 
                 ) : (
 

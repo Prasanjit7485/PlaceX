@@ -39,9 +39,10 @@ export interface Recruiter {
   id: string;
   name: string;
   email: string;
-  password: string;
+  password?: string;
   companyName: string;
   designation: string;
+  recruiterStatus?: 'PENDING' | 'APPROVED' | 'REJECTED';
 }
 
 export interface Student {
@@ -50,6 +51,8 @@ export interface Student {
   email: string;
   registrationNumber?: string;
   password: string;
+  phone?: string;
+  year?: number;
 
   department: string;
   branch: string;

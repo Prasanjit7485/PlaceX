@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  X,
   LayoutDashboard,
   Briefcase,
   Globe,
@@ -7,12 +8,10 @@ import {
   Users,
   GitMerge,
   Mail,
-  X,
-  Shield,
-  Plus,
-  GraduationCap
+  Plus
 } from 'lucide-react';
 import type { AdminTabType } from './AdminSidebar';
+import placedLogo from '../../assets/placed_logo.png';
 
 interface AdminMobileDrawerProps {
   isOpen: boolean;
@@ -32,16 +31,13 @@ export const AdminMobileDrawer: React.FC<AdminMobileDrawerProps> = ({
   if (!isOpen) return null;
 
   const navItems = [
-    { id: 'dashboard' as AdminTabType, label: 'Analytics Dashboard', icon: LayoutDashboard },
-    { id: 'drives' as AdminTabType, label: 'Recruitment Drives', icon: Briefcase },
-    { id: 'scraped' as AdminTabType, label: 'Recruitment Feed', icon: Globe },
-    { id: 'calendar' as AdminTabType, label: 'Placement Calendar', icon: CalendarIcon },
+    { id: 'dashboard' as AdminTabType, label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'drives' as AdminTabType, label: 'Placement Drives', icon: Briefcase },
+    { id: 'scraped' as AdminTabType, label: 'Scraped Jobs', icon: Globe },
+    { id: 'calendar' as AdminTabType, label: 'Calendar', icon: CalendarIcon },
     { id: 'students' as AdminTabType, label: 'Student Database', icon: Users },
-    {
-  id: 'alumni' as AdminTabType,
-  label: 'Alumni Management',
-  icon: GraduationCap
-},
+    { id: 'recruiters' as AdminTabType, label: 'Recruiter Management', icon: Users },
+    { id: 'alumni' as AdminTabType, label: 'Alumni Directory', icon: Users },
     { id: 'tracker' as AdminTabType, label: 'Live Round Tracker', icon: GitMerge },
     { id: 'hr' as AdminTabType, label: 'HR Outreach', icon: Mail }
   ];
@@ -53,11 +49,11 @@ export const AdminMobileDrawer: React.FC<AdminMobileDrawerProps> = ({
         {/* Drawer Header */}
         <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-linear-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center font-extrabold shadow-md shadow-blue-500/20 shrink-0">
-              <Shield size={22} />
+            <div className="w-10 h-10 rounded-xl bg-white text-white flex items-center justify-center border border-slate-200 shrink-0 p-1">
+              <img src={placedLogo} alt="PlaceD Logo" className="w-full h-full object-contain" />
             </div>
             <div>
-              <h3 className="font-extrabold text-slate-900 text-base font-display leading-tight tracking-tight">PlaceX Admin</h3>
+              <h3 className="font-extrabold text-slate-900 text-base font-display leading-tight tracking-tight">PlaceD Admin</h3>
               <p className="text-[10px] font-extrabold text-blue-600 uppercase tracking-widest mt-0.5">TPO Console</p>
             </div>
           </div>

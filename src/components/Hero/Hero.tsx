@@ -1,7 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GraduationCap, UserPlus, LogIn, ArrowRight } from 'lucide-react';
+import { UserPlus, LogIn, ArrowRight } from 'lucide-react';
 import { GravityStarsBackground } from './GravityStarsBackground';
+import placedLogo from '../../assets/placed_logo.png';
 import './Hero.css';
 
 interface HeroProps {
@@ -43,11 +44,11 @@ export const Hero: React.FC<HeroProps> = ({ onSelectAction }) => {
       </div>
 
       <div className="hero-content-wrapper">
-        <div className="hero-logo-box">
-          <GraduationCap className="hero-logo-icon" size={80} />
+        <div className="hero-logo-box flex items-center justify-center p-3 rounded-3xl bg-white/90 border border-blue-100 shadow-xl backdrop-blur-md">
+          <img src={placedLogo} alt="PlaceD Logo" className="w-20 h-20 sm:w-24 sm:h-24 object-contain" />
         </div>
 
-        <h1 className="hero-title">PlaceX</h1>
+        <h1 className="hero-title">PlaceD</h1>
 
         <span className="hero-subtitle-badge">
           AI Powered Placement Management
@@ -93,7 +94,7 @@ export const Hero: React.FC<HeroProps> = ({ onSelectAction }) => {
                 <ArrowRight size={16} className="hero-action-arrow" />
               </div>
               <p className="hero-action-subtitle">
-                Join PlaceX as a Student, TPO, Recruiter, or Alumni
+                Join PlaceD as a Student, TPO, Recruiter, or Alumni
               </p>
             </div>
           </button>

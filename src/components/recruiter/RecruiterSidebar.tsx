@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import {
   Menu,
   X,
-  Building2,
   LayoutDashboard,
   Briefcase,
   GitMerge
 } from 'lucide-react';
 import type { Recruiter } from '../../mockData';
+import placedLogo from '../../assets/placed_logo.png';
 
 export type RecruiterTabType = 'dashboard' | 'drives' | 'tracker';
 
@@ -26,7 +26,7 @@ export const RecruiterSidebar: React.FC<RecruiterSidebarProps> = ({
   onToggleExpand,
   recruiter
 }) => {
-  const [hoveredItem, setHoveredItem] = useState<{ id: string; label: string; y: number } | null>(null);
+  const [tooltip, setTooltip] = useState<{ text: string; top: number } | null>(null);
 
   const navItems = [
     { id: 'dashboard' as RecruiterTabType, label: 'Hiring Dashboard', icon: LayoutDashboard },
@@ -34,15 +34,15 @@ export const RecruiterSidebar: React.FC<RecruiterSidebarProps> = ({
     { id: 'tracker' as RecruiterTabType, label: 'Applicant Tracker', icon: GitMerge }
   ];
 
-  const handleMouseEnter = (e: React.MouseEvent<HTMLButtonElement>, id: string, label: string) => {
-    if (isExpanded) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const centerY = rect.top + rect.height / 2;
-    setHoveredItem({ id, label, y: centerY });
+  const handleMouseEnter = (e: React.MouseEvent<HTMLElement>, label: string) => {
+    if (!isExpanded) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      setTooltip({ text: label, top: rect.top + rect.height / 2 });
+    }
   };
 
   const handleMouseLeave = () => {
-    setHoveredItem(null);
+    setTooltip(null);
   };
 
   return (
@@ -56,8 +56,8 @@ export const RecruiterSidebar: React.FC<RecruiterSidebarProps> = ({
         <div className="rp-sidebar-brand">
           {isExpanded ? (
             <div className="rp-brand-logo">
-              <div className="rp-brand-icon-box">
-                <Building2 size={22} />
+              <div className="rp-brand-icon-box flex items-center justify-center p-0.5">
+                <img src={placedLogo} alt="PlaceD Logo" className="w-7 h-7 object-contain rounded-md shrink-0" />
               </div>
               <div className="flex flex-col min-w-0">
                 <span className="rp-brand-text truncate leading-none">{recruiter.companyName}</span>
@@ -70,7 +70,7 @@ export const RecruiterSidebar: React.FC<RecruiterSidebarProps> = ({
             <div className="w-full flex justify-center">
               <button
                 onClick={onToggleExpand}
-                onMouseEnter={(e) => handleMouseEnter(e, 'expand-btn', 'Expand Navigation')}
+                onMouseEnter={(e) => handleMouseEnter(e, 'Expand Navigation')}
                 onMouseLeave={handleMouseLeave}
                 className="rp-sidebar-toggle-btn"
                 aria-label="Expand Sidebar (☰)"
@@ -120,7 +120,7 @@ export const RecruiterSidebar: React.FC<RecruiterSidebarProps> = ({
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                onMouseEnter={(e) => handleMouseEnter(e, item.id, item.label)}
+                onMouseEnter={(e) => handleMouseEnter(e, item.label)}
                 onMouseLeave={handleMouseLeave}
                 className={`rp-nav-item ${isActive ? 'active' : ''}`}
                 aria-label={item.label}
@@ -134,12 +134,12 @@ export const RecruiterSidebar: React.FC<RecruiterSidebarProps> = ({
       </aside>
 
       {/* Floating Hover Tooltip (Rendered outside overflow bounds when Collapsed) */}
-      {!isExpanded && hoveredItem && (
+      {!isExpanded && tooltip && (
         <div
           className="rp-fixed-tooltip"
-          style={{ top: `${hoveredItem.y}px` }}
+          style={{ top: `${tooltip.top}px` }}
         >
-          {hoveredItem.label}
+          {tooltip.text}
         </div>
       )}
     </>

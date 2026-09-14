@@ -26,13 +26,19 @@ export const studentApi = {
   getById: (id: string) => request<StudentResponse>(`/students/${id}`),
 
   add: (data: StudentRequest) => {
-    const cgpaVal = data.CGPA ?? data.cgpa ?? 0;
+    const cgpaVal = Number(data.cgpa ?? data.CGPA ?? 0);
     const payload: Record<string, any> = {
-      ...data,
+      id: data.id,
+      name: data.name,
+      email: data.email,
+      password: data.password,
+      phone: data.phone,
       department: normalizeDepartment(data.department),
-      CGPA: cgpaVal,
+      activeBacklogs: Number(data.activeBacklogs ?? 0),
+      resumeUrl: data.resumeUrl,
+      year: Number(data.year ?? 4),
+      cgpa: cgpaVal,
     };
-    delete payload.cgpa;
     return request<StudentResponse>("/students/add", {
       method: "POST",
       body: JSON.stringify(payload),
@@ -40,13 +46,18 @@ export const studentApi = {
   },
 
   update: (data: StudentRequest) => {
-    const cgpaVal = data.CGPA ?? data.cgpa ?? 0;
+    const cgpaVal = Number(data.cgpa ?? data.CGPA ?? 0);
     const payload: Record<string, any> = {
-      ...data,
+      id: data.id,
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
       department: normalizeDepartment(data.department),
-      CGPA: cgpaVal,
+      activeBacklogs: Number(data.activeBacklogs ?? 0),
+      resumeUrl: data.resumeUrl,
+      year: Number(data.year ?? 4),
+      cgpa: cgpaVal,
     };
-    delete payload.cgpa;
     return request<StudentResponse>("/students/update", {
       method: "PUT",
       body: JSON.stringify(payload),

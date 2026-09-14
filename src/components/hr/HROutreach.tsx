@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Company } from "../../mockHR";
+import type { Company } from "./hrTypes";
 import { Mail } from "lucide-react";
 
 import CompanyList from "./CompanyList";

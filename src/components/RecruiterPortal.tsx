@@ -64,8 +64,13 @@ export const RecruiterPortal: React.FC<RecruiterPortalProps> = ({
   const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>(false);
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState<boolean>(false);
 
-  // Scoped to this recruiter's own company drives only
-  const myDrives = drives.filter((d) => d.recruiterId === recruiter.id);
+  // Scoped to this recruiter's own company drives (matches by recruiterId, companyId, or companyName)
+  const myDrives = drives.filter((d) => {
+    if (d.recruiterId && recruiter.id && String(d.recruiterId) === String(recruiter.id)) return true;
+    if (d.companyId && (recruiter as any).companyId && String(d.companyId) === String((recruiter as any).companyId)) return true;
+    if (d.companyName && recruiter.companyName && d.companyName.trim().toLowerCase() === recruiter.companyName.trim().toLowerCase()) return true;
+    return false;
+  });
 
   // New Drive Form State
   const [showDriveForm, setShowDriveForm] = useState(false);
@@ -84,12 +89,18 @@ export const RecruiterPortal: React.FC<RecruiterPortalProps> = ({
   const [selectedStudentForResume, setSelectedStudentForResume] = useState<Student | null>(null);
   const [trackerDriveId, setTrackerDriveId] = useState<string>(myDrives[0]?.id || '');
 
+  useEffect(() => {
+    if ((!trackerDriveId || !myDrives.some((d) => String(d.id) === String(trackerDriveId))) && myDrives.length > 0) {
+      setTrackerDriveId(String(myDrives[0].id));
+    }
+  }, [myDrives, trackerDriveId]);
+
   // KPI Computations (EXACT UNTOUCHED ALGORITHM)
   const activeDrivesCount = myDrives.filter((d) => d.status === 'OPEN').length;
 
   const myApplications = students.flatMap((s) =>
     s.applications
-      .filter((app) => myDrives.some((d) => d.id === app.jobPostingId))
+      .filter((app) => myDrives.some((d) => String(d.id) === String(app.jobPostingId) || String(d.id) === String(app.driveId)))
       .map((app) => ({ student: s, app }))
   );
   const totalApplicants = myApplications.length;
@@ -129,7 +140,7 @@ export const RecruiterPortal: React.FC<RecruiterPortalProps> = ({
       status: 'OPEN',
       companyId: 0,
       recruitmentType: 'CAMPUS',
-sourceType: 'RECRUITER',
+      sourceType: 'RECRUITER',
     });
 
     setRole('');
@@ -154,10 +165,10 @@ sourceType: 'RECRUITER',
     }
   };
 
-  const activeTrackerDrive = myDrives.find((d) => d.id === trackerDriveId);
+  const activeTrackerDrive = myDrives.find((d) => String(d.id) === String(trackerDriveId));
   const activeTrackerApplications = students.flatMap((s) =>
     s.applications
-      .filter((app) => app.jobPostingId === trackerDriveId && app.status !== 'Rejected' && app.status !== 'Selected')
+      .filter((app) => (String(app.jobPostingId) === String(trackerDriveId) || String(app.driveId) === String(trackerDriveId)) && app.status !== 'Rejected' && app.status !== 'Selected')
       .map((app) => ({ student: s, app }))
   );
 
@@ -199,6 +210,19 @@ sourceType: 'RECRUITER',
         {/* Content Workspace Area */}
         <div className="rp-content-wrapper">
           <main className="rp-workspace">
+            {recruiter.recruiterStatus === 'PENDING' && (
+              <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 flex items-center justify-between animate-fade-in">
+                <div className="flex items-center gap-3">
+                  <span className="px-2.5 py-1 rounded-full text-xs font-extrabold uppercase bg-amber-500/20 text-amber-400 border border-amber-500/40">
+                    Account Status: PENDING
+                  </span>
+                  <span className="text-xs font-medium">
+                    Your recruiter account is currently pending approval by the TPO Administration. Full drive publishing options will activate once verified.
+                  </span>
+                </div>
+              </div>
+            )}
+
             {activeTab === 'dashboard' && (
               <RecruiterDashboardView
                 recruiter={recruiter}

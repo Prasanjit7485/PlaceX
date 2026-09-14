@@ -7,4 +7,10 @@ export const authApi = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+
+  loginStudent: (data: { identifier: string; password: string }) =>
+    request<LoginResponse>("/auth/login/students", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
 };

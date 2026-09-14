@@ -22,11 +22,14 @@ export const applicationApi = {
       body: JSON.stringify(data),
     }),
 
-  updateStatus: (id: number, status: string) =>
-    request<ApplicationResponse>(
-      `/applications/${id}/status?newStatus=${status}`,
+  updateStatus: (id: number, status: string) => {
+    const s = status.trim().toUpperCase();
+    const validStatus = s === "SHORTLISTED" || s === "REJECTED" ? s : "APPLIED";
+    return request<ApplicationResponse>(
+      `/applications/${id}/status?newStatus=${encodeURIComponent(validStatus)}`,
       { method: "PATCH" }
-    ),
+    );
+  },
 
   
   delete: (id: number) =>
@@ -55,19 +58,15 @@ export const applicationApi = {
     ),
 
   updateRound: (
-    applicationId: number,
-    roundId: number,
-    data: {
-      roundNumber?: number;
-      roundType?: string;
-      scheduledAt?: string;
-    }
-  ) =>
-    request<InterviewRoundResponse>(
-      `/applications/${applicationId}/rounds/${roundId}`,
-      {
-        method: "PUT",
-        body: JSON.stringify(data),
-      }
-    ),
+    roundIdOrAppId: number,
+    roundIdOrData: any,
+    dataArg?: any
+  ) => {
+    const roundId = dataArg !== undefined ? (roundIdOrData as number) : roundIdOrAppId;
+    const data = dataArg !== undefined ? dataArg : roundIdOrData;
+    return request<InterviewRoundResponse>(`/applications/rounds/${roundId}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  },
 };

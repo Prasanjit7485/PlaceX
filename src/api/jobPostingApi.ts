@@ -170,56 +170,41 @@ export const jobPostingApi = {
       (c: { name: string; }) => c.name.trim().toLowerCase() === companyName.trim().toLowerCase()
     );
 
+    const safeLocation = companyLocation?.trim() || jobData.location?.trim() || 'Campus';
+
     const company =
       existing ??
       (await companyApi.create({
         name: companyName.trim(),
-        location: companyLocation.trim(),
+        location: safeLocation,
         website: companyWebsite?.trim() || undefined,
       }));
 
     const posting = await companyApi.addJobPosting(
-  company.id,
-  {
-    title: jobData.title,
-
-    description:
-      jobData.description,
-
-    location:
-      jobData.location,
-
-    eligibleCGPACutoff:
-      jobData.eligibleCGPACutoff,
-
-    allowedBacklogs:
-      jobData.allowedBacklogs,
-
-    allowedBranches:
-      jobData.allowedBranches,
-
-    requiredSkills:
-      jobData.requiredSkills,
-
-    salary:
-      jobData.salary,
-
-    deadline:
-      jobData.deadline,
-
-    eligibleBatch:
-      jobData.eligibleBatch,
-
-    companyId:
       company.id,
-
-    recruitmentType:
-      'CAMPUS',
-
-    sourceType:
-      'TPO',
-  }
-);
+      {
+        title: jobData.title,
+        description: jobData.description || undefined,
+        eligibleCGPACutoff:
+          typeof jobData.eligibleCGPACutoff === 'number' && !isNaN(jobData.eligibleCGPACutoff)
+            ? jobData.eligibleCGPACutoff
+            : undefined,
+        allowedBacklogs:
+          typeof jobData.allowedBacklogs === 'number' && !isNaN(jobData.allowedBacklogs)
+            ? jobData.allowedBacklogs
+            : undefined,
+        allowedBranches: jobData.allowedBranches || undefined,
+        requiredSkills: jobData.requiredSkills || undefined,
+        salary:
+          typeof jobData.salary === 'number' && !isNaN(jobData.salary) && jobData.salary > 0
+            ? jobData.salary
+            : 6.0,
+        deadline: jobData.deadline && !isNaN(Date.parse(jobData.deadline))
+          ? jobData.deadline
+          : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        companyId: company.id,
+      }
+    );
 
     return {
   id: String(posting.id),

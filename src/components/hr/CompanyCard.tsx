@@ -1,4 +1,4 @@
-import type { Company } from "../../mockHR";
+import type { Company } from "./hrTypes";
 
 interface Props {
   company: Company;

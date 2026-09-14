@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   Menu,
   X,
-  Shield,
   LayoutDashboard,
   Briefcase,
   Globe,
@@ -13,6 +12,7 @@ import {
   Plus,
   GraduationCap
 } from 'lucide-react';
+import placedLogo from '../../assets/placed_logo.png';
 
 export type AdminTabType =
   | 'dashboard'
@@ -78,11 +78,11 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
         <div className="ap-sidebar-brand">
           {isExpanded ? (
             <div className="ap-brand-logo">
-              <div className="ap-brand-icon-box">
-                <Shield size={22} />
+              <div className="ap-brand-icon-box flex items-center justify-center p-0.5">
+                <img src={placedLogo} alt="PlaceD Logo" className="w-7 h-7 object-contain rounded-md shrink-0" />
               </div>
               <div className="flex flex-col min-w-0">
-                <span className="ap-brand-text leading-none">PlaceX Admin</span>
+                <span className="ap-brand-text leading-none">PlaceD Admin</span>
                 <span className="text-[10px] text-blue-600 font-bold uppercase tracking-wider mt-0.5">
                   TPO Console
                 </span>

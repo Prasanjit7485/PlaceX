@@ -1,931 +1,208 @@
-.alumni-layout {
-  min-height: calc(100vh - 64px);
-  background: #f8fafc;
-  color: #0f172a;
-  display: flex;
+/* =========================================================
+   ALUMNI PORTAL DESIGN SYSTEM & SIDEBAR STYLES (BLUE THEME)
+   ========================================================= */
+
+:root {
+  --alp-primary: #2563eb;
+  --alp-primary-hover: #1d4ed8;
+  --alp-primary-light: #eff6ff;
+  --alp-accent: #4f46e5;
 }
 
-.alumni-sidebar {
-  width: 270px;
-  position: fixed;
-  top: 64px;
-  bottom: 0;
-  left: 0;
-  background: #fff;
-  border-right: 1px solid #e2e8f0;
-  display: flex;
+/* Sidebar Container */
+.alp-sidebar {
   flex-direction: column;
-  z-index: 50;
+  height: 100vh;
+  background-color: #ffffff;
+  border-right: 1px solid #dbeafe;
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 40;
+  user-select: none;
 }
 
-.alumni-sidebar-header {
-  padding: 20px;
-  border-bottom: 1px solid #eef2f7;
+.alp-sidebar-expanded {
+  width: 280px;
 }
 
-.alumni-brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.alp-sidebar-collapsed {
+  width: 72px;
 }
 
-.alumni-brand-icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 13px;
-  background: linear-gradient(135deg, #d97706, #f59e0b);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.alumni-brand-name {
-  font-size: 19px;
-  font-weight: 900;
-}
-
-.alumni-brand-subtitle {
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  color: #d97706;
-  margin-top: 2px;
-}
-
-.alumni-profile {
-  margin: 18px 15px 10px;
-  padding: 12px;
-  background: #fffbeb;
-  border: 1px solid #fde68a;
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  gap: 11px;
-}
-
-.alumni-avatar {
-  width: 42px;
-  height: 42px;
-  flex-shrink: 0;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #1d4ed8, #2563eb);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.alumni-avatar.small {
-  width: 35px;
-  height: 35px;
-}
-
-.alumni-avatar.huge {
-  width: 76px;
-  height: 76px;
-  font-size: 22px;
-}
-
-.alumni-profile-info {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.alumni-profile-info strong {
-  font-size: 12px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.alumni-profile-info span {
-  font-size: 10px;
-  color: #64748b;
-  margin-top: 3px;
-}
-
-.alumni-navigation {
-  padding: 14px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  overflow-y: auto;
-}
-
-.alumni-nav-label {
-  font-size: 9px;
-  color: #94a3b8;
-  font-weight: 800;
-  letter-spacing: .1em;
-  padding: 7px 11px;
-}
-
-.alumni-nav-item {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  border: 0;
-  background: transparent;
-  padding: 11px 13px;
-  border-radius: 11px;
-  color: #475569;
-  font-weight: 700;
-  font-size: 13px;
-  cursor: pointer;
-  text-align: left;
-}
-
-.alumni-nav-item:hover {
-  background: #f8fafc;
-  color: #0f172a;
-}
-
-.alumni-nav-item.active {
-  color: #b45309;
-  background: #fff7ed;
-}
-
-.alumni-sidebar-footer {
-  margin-top: auto;
-  padding: 15px;
-  border-top: 1px solid #eef2f7;
-}
-
-.alumni-logout {
-  width: 100%;
-  border: 0;
-  background: #f8fafc;
-  border-radius: 11px;
-  padding: 11px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: #64748b;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.alumni-logout:hover {
-  color: #dc2626;
-  background: #fef2f2;
-}
-
-.alumni-main {
-  margin-left: 270px;
-  flex: 1;
-  min-width: 0;
-}
-
-.alumni-topbar {
-  min-height: 90px;
-  padding: 22px 34px;
-  background: white;
-  border-bottom: 1px solid #e2e8f0;
+/* Header & Toggle Button */
+.alp-sidebar-header {
+  height: 64px;
+  padding: 0 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  border-bottom: 1px solid #eff6ff;
 }
 
-.alumni-page-kicker {
-  color: #d97706;
-  font-size: 9px;
-  font-weight: 900;
-  letter-spacing: .14em;
-  margin-bottom: 5px;
-}
-
-.alumni-topbar h1 {
-  margin: 0;
-  font-size: 25px;
-  font-weight: 900;
-}
-
-.alumni-topbar-user {
+.alp-brand-box {
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
 }
 
-.alumni-topbar-user-text {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+.alp-brand-icon-box {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  border: 1px solid #bfdbfe;
 }
 
-.alumni-topbar-user-text strong {
-  font-size: 12px;
+.alp-brand-text {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 15px;
+  color: #0f172a;
 }
 
-.alumni-topbar-user-text span {
+.alp-sidebar-toggle-btn {
+  padding: 8px;
+  border-radius: 10px;
   color: #64748b;
-  font-size: 10px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-.alumni-content {
-  padding: 30px;
-  max-width: 1400px;
-  margin: auto;
-  width: 100%;
-}
-
-.alumni-welcome-card {
-  position: relative;
-  overflow: hidden;
-  padding: 30px;
-  border-radius: 20px;
-  background: linear-gradient(135deg, #fff7ed, #fffbeb);
-  border: 1px solid #fed7aa;
-  margin-bottom: 22px;
-}
-
-.welcome-label {
-  font-size: 10px;
-  font-weight: 900;
-  letter-spacing: .14em;
-  color: #d97706;
-}
-
-.alumni-welcome-card h2 {
-  font-size: 30px;
-  margin: 7px 0;
-  font-weight: 900;
-}
-
-.alumni-welcome-card p {
-  color: #64748b;
-  max-width: 650px;
-  margin: 0;
-}
-
-.welcome-decoration {
-  position: absolute;
-  right: 40px;
-  bottom: -15px;
-  color: #f59e0b;
-  opacity: .12;
-}
-
-.alumni-stat-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 17px;
-  margin-bottom: 22px;
-}
-
-.alumni-stat-card {
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  padding: 19px;
-  display: flex;
-  gap: 14px;
-  align-items: center;
-}
-
-.stat-icon {
-  width: 43px;
-  height: 43px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.stat-icon.blue {
-  background: #eff6ff;
+.alp-sidebar-toggle-btn:hover {
+  background-color: #eff6ff;
   color: #2563eb;
 }
 
-.stat-icon.green {
-  background: #ecfdf5;
-  color: #059669;
-}
-
-.stat-icon.purple {
-  background: #f5f3ff;
-  color: #7c3aed;
-}
-
-.alumni-stat-card span {
-  display: block;
-  color: #64748b;
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.alumni-stat-card strong {
-  display: block;
-  font-size: 25px;
-  margin-top: 2px;
-}
-
-.alumni-two-column {
-  display: grid;
-  grid-template-columns: 1.2fr .8fr;
-  gap: 20px;
-}
-
-.alumni-panel {
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 17px;
-  padding: 22px;
-}
-
-.alumni-panel.large {
-  max-width: 100%;
-}
-
-.panel-heading {
+/* Profile Card in Sidebar */
+.alp-sidebar-profile-card {
+  margin: 12px 16px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background-color: #eff6ff;
+  border: 1px solid #dbeafe;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 15px;
-  margin-bottom: 20px;
-}
-
-.panel-heading h3 {
-  margin: 0;
-  font-size: 17px;
-  font-weight: 900;
-}
-
-.panel-heading p {
-  margin: 4px 0 0;
-  color: #64748b;
-  font-size: 11px;
-}
-
-.quick-actions {
-  display: flex;
-  flex-direction: column;
   gap: 10px;
 }
 
-.quick-actions button {
-  display: flex;
-  gap: 13px;
-  align-items: center;
-  border: 1px solid #e2e8f0;
-  background: white;
-  padding: 14px;
-  border-radius: 13px;
-  cursor: pointer;
-  text-align: left;
-}
-
-.quick-actions button:hover {
-  border-color: #fdba74;
-  background: #fffaf5;
-}
-
-.quick-actions button > svg {
-  color: #d97706;
-}
-
-.quick-actions strong,
-.quick-actions span {
-  display: block;
-}
-
-.quick-actions strong {
+.alp-avatar-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+  color: #ffffff;
+  font-weight: 800;
   font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
 }
 
-.quick-actions span {
-  font-size: 10px;
-  color: #64748b;
-  margin-top: 3px;
-}
-
-.activity-list {
+/* Navigation List */
+.alp-sidebar-nav {
+  padding: 12px 10px;
   display: flex;
   flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  overflow-y: auto;
 }
 
-.activity-item {
-  display: flex;
-  gap: 12px;
-  padding: 12px 0;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.activity-dot {
-  width: 8px;
-  height: 8px;
-  background: #f59e0b;
-  border-radius: 50%;
-  margin-top: 5px;
-}
-
-.activity-item strong,
-.activity-item span {
-  display: block;
-}
-
-.activity-item strong {
-  font-size: 12px;
-}
-
-.activity-item span {
-  font-size: 10px;
-  color: #64748b;
-  margin-top: 3px;
-}
-
-.alumni-empty {
-  padding: 35px 15px;
-  text-align: center;
-  color: #94a3b8;
-}
-
-.alumni-empty p {
-  font-size: 12px;
-}
-
-.large-empty {
-  padding: 70px 20px;
-}
-
-.alumni-form {
-  max-width: 900px;
-}
-
-.form-field {
-  margin-bottom: 18px;
-}
-
-.form-field label {
-  display: block;
-  font-size: 12px;
-  font-weight: 800;
-  margin-bottom: 7px;
-}
-
-.form-field input,
-.form-field textarea,
-.form-field select {
-  width: 100%;
-  box-sizing: border-box;
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
-  padding: 11px 13px;
-  font: inherit;
-  font-size: 13px;
-  outline: none;
-  background: white;
-}
-
-.form-field textarea {
-  resize: vertical;
-}
-
-.form-field input:focus,
-.form-field textarea:focus,
-.form-field select:focus {
-  border-color: #f59e0b;
-  box-shadow: 0 0 0 3px rgba(245, 158, 11, .1);
-}
-
-.select-wrapper {
+.alp-nav-item {
   position: relative;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #475569;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: left;
+  white-space: nowrap;
 }
 
-.select-wrapper select {
-  appearance: none;
+.alp-sidebar-collapsed .alp-nav-item {
+  justify-content: center;
+  padding: 12px 0;
 }
 
-.select-wrapper svg {
+.alp-nav-item:hover {
+  background-color: #eff6ff;
+  color: #2563eb;
+}
+
+.alp-nav-item.active {
+  background-color: #eff6ff;
+  color: #2563eb;
+  font-weight: 700;
+}
+
+.alp-nav-item.active::before {
+  content: '';
   position: absolute;
-  right: 13px;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3.5px;
+  border-radius: 0 4px 4px 0;
+  background-color: #2563eb;
+}
+
+.alp-nav-item.active .alp-nav-icon {
+  color: #2563eb;
+}
+
+.alp-nav-icon {
+  flex-shrink: 0;
+}
+
+/* Footer & Logout */
+.alp-sidebar-footer {
+  padding: 12px 10px;
+  border-top: 1px solid #eff6ff;
+}
+
+.alp-nav-item.logout-btn:hover {
+  background-color: #fff1f2;
+  color: #e11d48;
+}
+
+/* Fixed Tooltip when Sidebar is Collapsed */
+.alp-fixed-tooltip {
+  position: fixed;
+  left: 84px;
+  transform: translateY(-50%);
+  background-color: #0f172a;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 6px 12px;
+  border-radius: 8px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 100;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.18);
+  animation: fadeIn 0.15s ease;
+}
+
+.alp-fixed-tooltip::before {
+  content: '';
+  position: absolute;
+  left: -4px;
   top: 50%;
   transform: translateY(-50%);
-  pointer-events: none;
-  color: #64748b;
-}
-
-.checkbox-row {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  font-size: 12px;
-  color: #475569;
-  margin-bottom: 18px;
-}
-
-.checkbox-row input {
-  accent-color: #d97706;
-}
-
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 9px;
-}
-
-.primary-button,
-.secondary-button {
-  border: 0;
-  border-radius: 10px;
-  padding: 10px 15px;
-  font-weight: 800;
-  font-size: 12px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-}
-
-.primary-button {
-  color: white;
-  background: #d97706;
-}
-
-.primary-button:hover {
-  background: #b45309;
-}
-
-.secondary-button {
-  color: #475569;
-  background: #f1f5f9;
-}
-
-.blog-list,
-.referral-list {
-  display: flex;
-  flex-direction: column;
-  gap: 13px;
-}
-
-.blog-card,
-.referral-card {
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 17px;
-}
-
-.blog-card-top,
-.referral-title-row,
-.referral-footer,
-.blog-card-bottom {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-}
-
-.category-badge,
-.status-badge,
-.approved-badge {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 999px;
-  padding: 5px 9px;
-  font-size: 9px;
-  font-weight: 800;
-}
-
-.category-badge {
-  background: #fff7ed;
-  color: #b45309;
-}
-
-.status-badge.published,
-.approved-badge {
-  background: #ecfdf5;
-  color: #047857;
-}
-
-.status-badge.draft {
-  background: #f1f5f9;
-  color: #64748b;
-}
-
-.blog-card h3 {
-  margin: 13px 0 6px;
-  font-size: 16px;
-}
-
-.blog-card p,
-.referral-card p {
-  color: #64748b;
-  line-height: 1.6;
-  font-size: 12px;
-}
-
-.blog-card-bottom,
-.referral-footer {
-  margin-top: 15px;
-  padding-top: 12px;
-  border-top: 1px solid #f1f5f9;
-}
-
-.blog-card-bottom > span,
-.referral-footer > span {
-  color: #94a3b8;
-  font-size: 10px;
-}
-
-.card-actions {
-  display: flex;
-  gap: 7px;
-}
-
-.card-actions button {
-  border: 0;
-  background: #f8fafc;
-  color: #475569;
-  border-radius: 8px;
-  padding: 7px 9px;
-  display: inline-flex;
-  gap: 5px;
-  align-items: center;
-  font-size: 10px;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.card-actions button:hover {
-  background: #e2e8f0;
-}
-
-.card-actions button.danger:hover {
-  background: #fef2f2;
-  color: #dc2626;
-}
-
-.referral-form {
-  border: 1px solid #fed7aa;
-  background: #fffaf5;
-  padding: 18px;
-  border-radius: 14px;
-  margin-bottom: 20px;
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
-}
-
-.referral-card {
-  display: flex;
-  gap: 15px;
-}
-
-.referral-company-icon {
-  width: 45px;
-  height: 45px;
-  border-radius: 12px;
-  background: #eff6ff;
-  color: #2563eb;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.referral-main {
-  flex: 1;
-}
-
-.referral-title-row h3 {
-  margin: 0;
-  font-size: 15px;
-}
-
-.referral-title-row strong {
-  font-size: 11px;
-  color: #475569;
-}
-
-.settings-profile {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  padding: 20px 0;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.settings-profile h2 {
-  margin: 0 0 4px;
-  font-size: 22px;
-}
-
-.settings-profile p {
-  margin: 0 0 10px;
-  color: #64748b;
-  font-size: 12px;
-}
-
-.profile-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 15px;
-  margin: 22px 0;
-}
-
-.profile-grid > div {
-  padding: 15px;
-  background: #f8fafc;
-  border-radius: 11px;
-}
-
-.profile-grid span,
-.profile-grid strong {
-  display: block;
-}
-
-.profile-grid span {
-  color: #64748b;
-  font-size: 10px;
-  margin-bottom: 4px;
-}
-
-.profile-grid strong {
-  font-size: 13px;
-}
-
-.linkedin-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  background: #2563eb;
-  color: white;
-  padding: 10px 14px;
-  border-radius: 10px;
-  text-decoration: none;
-  font-size: 11px;
-  font-weight: 800;
-}
-
-.alumni-modal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  background: rgba(15, 23, 42, .5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-}
-
-.alumni-modal {
-  width: min(800px, 100%);
-  max-height: 85vh;
-  overflow-y: auto;
-  background: white;
-  border-radius: 18px;
-  padding: 28px;
-  position: relative;
-}
-
-.modal-close {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  border: 0;
-  background: #f1f5f9;
-  border-radius: 8px;
-  padding: 7px;
-  cursor: pointer;
-}
-
-.alumni-modal h2 {
-  margin: 15px 0 7px;
-  font-size: 24px;
-}
-
-.modal-meta {
-  color: #94a3b8;
-  font-size: 11px;
-}
-
-.modal-content {
-  white-space: pre-wrap;
-  line-height: 1.8;
-  margin-top: 25px;
-  color: #334155;
-  font-size: 13px;
-}
-
-.alumni-mobile-header {
-  display: none;
-}
-
-.alumni-close-mobile {
-  display: none;
-}
-
-.alumni-overlay {
-  display: none;
-}
-
-@media (max-width: 900px) {
-  .alumni-sidebar {
-    transform: translateX(-100%);
-    transition: transform .25s ease;
-  }
-
-  .alumni-sidebar.open {
-    transform: translateX(0);
-  }
-
-  .alumni-main {
-    margin-left: 0;
-  }
-
-  .alumni-mobile-header {
-    display: flex;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 64px;
-    z-index: 40;
-    background: white;
-    border-bottom: 1px solid #e2e8f0;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 15px;
-  }
-
-  .alumni-mobile-title {
-    font-weight: 900;
-  }
-
-  .alumni-icon-btn {
-    border: 0;
-    background: #f1f5f9;
-    border-radius: 9px;
-    padding: 8px;
-  }
-
-  .alumni-close-mobile {
-    display: block;
-    position: absolute;
-    right: 15px;
-    top: 20px;
-    border: 0;
-    background: transparent;
-  }
-
-  .alumni-overlay {
-    display: block;
-    position: fixed;
-    inset: 0;
-    background: rgba(15,23,42,.4);
-    z-index: 45;
-  }
-
-  .alumni-topbar {
-    margin-top: 64px;
-  }
-
-  .alumni-stat-grid,
-  .alumni-two-column {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 600px) {
-  .alumni-content {
-    padding: 15px;
-  }
-
-  .alumni-topbar {
-    padding: 17px;
-  }
-
-  .alumni-topbar-user-text {
-    display: none;
-  }
-
-  .alumni-welcome-card {
-    padding: 22px;
-  }
-
-  .alumni-welcome-card h2 {
-    font-size: 24px;
-  }
-
-  .form-grid,
-  .profile-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .blog-card-bottom,
-  .referral-footer {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .referral-card {
-    flex-direction: column;
-  }
+  border-width: 4px 4px 4px 0;
+  border-style: solid;
+  border-color: transparent #0f172a transparent transparent;
 }

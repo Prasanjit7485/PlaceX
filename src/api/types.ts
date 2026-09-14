@@ -5,8 +5,8 @@ export interface StudentResponse {
   registrationNumber?: string;
   phone: string;
   department: string;
-  CGPA?: number;
   cgpa?: number;
+  CGPA?: number;
   activeBacklogs: number;
   resumeUrl: string;
   year: number;
@@ -22,8 +22,8 @@ export interface StudentRequest {
   activeBacklogs?: number;
   resumeUrl: string;
   year: number;
-  CGPA?: number;
   cgpa?: number;
+  CGPA?: number;
 }
 export interface CompanyResponse {
   id: number;
@@ -81,25 +81,22 @@ export interface JobPostingRequest {
   title: string;
   description?: string;
 
-  // Campus-only fields
+  // OpenAPI JobPostingRequestDTO fields
   eligibleCGPACutoff?: number | null;
   allowedBacklogs?: number | null;
   allowedBranches?: string | null;
-  eligibleBatch?: string | null;
   requiredSkills?: string | null;
 
   salary?: number | null;
   deadline?: string | null;
 
   companyId?: number | null;
+
+  // Extra UI helper fields (optional for frontend drive creation helper)
   location?: string | null;
-
-  // Recruitment classification
-  recruitmentType: 'CAMPUS' | 'OFF_CAMPUS';
-
+  eligibleBatch?: string | null;
+  recruitmentType?: 'CAMPUS' | 'OFF_CAMPUS';
   sourceType?: 'RECRUITER' | 'TPO' | 'DATASET' | 'SCRAPER';
-
-  // Scraped job fields
   applyUrl?: string | null;
   source?: string | null;
   postedAt?: string | null;
@@ -228,6 +225,7 @@ export interface ApplicationResponse {
   jobPostingId: number;
   jobTitle: string;
   companyName: string;
+  currentRoundIndex?: number;
 }
 
 export interface PlacementEventResponse {
@@ -337,4 +335,20 @@ export interface AlumniBlogResponse {
   updatedAt?: string;
   createdAt?: string;
   alumniId: number;
+}
+
+export type NotificationsType =
+  | 'JOB_POSTED'
+  | 'APPLICATION_STATUS'
+  | 'INTERVIEW_SCHEDULED'
+  | 'GENERAL';
+
+export interface NotificationResponse {
+  id: number;
+  type: NotificationsType;
+  title: string;
+  body: string;
+  studentId?: number | string | null;
+  createdAt?: string | null;
+  read: boolean;
 }

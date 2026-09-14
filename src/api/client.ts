@@ -38,8 +38,9 @@ async function request<T>(
 
   if (!response.ok) {
     if (response.status === 401) {
-      if (typeof window !== "undefined") {
+      if (typeof window !== "undefined" && !isPublicEndpoint) {
         localStorage.removeItem("token");
+        localStorage.removeItem("role");
         window.dispatchEvent(new Event("auth:unauthorized"));
       }
     }
@@ -62,6 +63,13 @@ async function request<T>(
           jsonErr.error
         ) {
           errorMessage = jsonErr.error;
+        } else {
+          const values = Object.entries(jsonErr)
+            .map(([k, v]) => (typeof v === "string" ? `${k}: ${v}` : null))
+            .filter(Boolean);
+          if (values.length > 0) {
+            errorMessage = values.join(", ");
+          }
         }
       }
     } catch {
