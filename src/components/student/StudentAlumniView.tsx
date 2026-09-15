@@ -2,12 +2,10 @@ import React, { useMemo, useState } from 'react';
 import {
   BookOpen,
   BriefcaseBusiness,
-  CalendarDays,
   ChevronDown,
   ExternalLink,
   Mail,
   Search,
-  UserRound,
   UsersRound,
   Building2,
   GraduationCap,
@@ -85,25 +83,6 @@ export const StudentAlumniView: React.FC<StudentAlumniViewProps> = ({
   }, [blogs, selectedCategory, searchQuery]);
 
   /*
-   * Only active referrals are visible to students.
-   */
-  const activeReferrals = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-
-    return referrals.filter((referral) => {
-      if (!referral.active) return false;
-
-      if (!query) return true;
-
-      return (
-        referral.companyName.toLowerCase().includes(query) ||
-        referral.role.toLowerCase().includes(query) ||
-        referral.description.toLowerCase().includes(query)
-      );
-    });
-  }, [referrals, searchQuery]);
-
-  /*
    * Approved alumni directory list for students.
    */
   const approvedAlumniList = useMemo(() => {
@@ -141,10 +120,6 @@ export const StudentAlumniView: React.FC<StudentAlumniViewProps> = ({
   const getAuthorCompany = (blog: Blog) => {
     const author = getAlumni(blog.alumniId);
     return author?.currentCompany || 'Professional';
-  };
-
-  const getReferralAlumni = (referral: Referral) => {
-    return getAlumni(referral.alumniId);
   };
 
   const getInitials = (name: string) => {
@@ -402,89 +377,11 @@ export const StudentAlumniView: React.FC<StudentAlumniViewProps> = ({
 
       {/* REFERRALS */}
       {activeSection === 'referrals' && (
-        <>
-          {activeReferrals.length === 0 ? (
-            <EmptyState
-              icon={<BriefcaseBusiness size={30} />}
-              title="No active referrals found"
-              description={
-                searchQuery
-                  ? 'Try searching for a different company or job role.'
-                  : 'There are no active referral opportunities posted right now.'
-              }
-            />
-          ) : (
-            <div className="student-alumni-referral-grid">
-              {activeReferrals.map((referral) => {
-                const referralAlumni = getReferralAlumni(referral);
-
-                return (
-                  <article
-                    key={referral.id}
-                    className="student-alumni-referral-card"
-                  >
-                    <div className="student-alumni-referral-top">
-                      <div className="student-alumni-company-icon">
-                        {referral.companyName.charAt(0)}
-                      </div>
-
-                      <div className="student-alumni-referral-info font-display">
-                        <div className="flex items-center justify-between gap-2">
-                          <div>
-                            <h2>{referral.companyName}</h2>
-                            <h3>{referral.role}</h3>
-                          </div>
-
-                          <span className="student-alumni-active-badge">
-                            Active
-                          </span>
-                        </div>
-
-                        <p>{referral.description}</p>
-
-                        <div className="student-alumni-referral-meta">
-                          <span>
-                            <UserRound size={14} />
-                            {referralAlumni?.name || 'Alumni'}
-                          </span>
-
-                          <span>
-                            <CalendarDays size={14} />
-                            {formatDate(referral.postedDate)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="student-alumni-contact-actions">
-                      {referralAlumni?.linkedinUrl && (
-                        <a
-                          href={referralAlumni.linkedinUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="student-alumni-contact linkedin"
-                        >
-                          <ExternalLink size={16} />
-                          LinkedIn
-                        </a>
-                      )}
-
-                      {referralAlumni?.email && (
-                        <a
-                          href={`mailto:${referralAlumni.email}`}
-                          className="student-alumni-contact email"
-                        >
-                          <Mail size={16} />
-                          Email Alumni
-                        </a>
-                      )}
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          )}
-        </>
+        <div className="flex flex-col items-center justify-center p-8 sm:p-12 rounded-3xl bg-rose-50 border-2 border-rose-300 text-center gap-3 my-4 animate-fade-in shadow-xs">
+          <h2 className="text-2xl sm:text-4xl font-black text-rose-600 font-display tracking-tight uppercase">
+            referral is not available now , the feature is coming soon
+          </h2>
+        </div>
       )}
 
       {/* ALUMNI DIRECTORY */}

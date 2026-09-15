@@ -8,8 +8,22 @@ import { companyApi } from "./companyApi";
 import { applicationApi } from "./applicationApi";
 
 export const jobPostingApi = {
-  getAll: () =>
-    request<JobPostingResponse[]>("/job-postings/all"),
+  getAll: async (): Promise<JobPostingResponse[]> => {
+    const postings = await request<JobPostingResponse[]>("/job-postings/all");
+    return (postings || []).map((jp) => {
+      const isScraped =
+        jp.recruitmentType === 'OFF_CAMPUS' ||
+        jp.sourceType === 'SCRAPER' ||
+        Boolean(jp.source && jp.source.trim() && jp.source.toLowerCase() !== 'nan') ||
+        Boolean(jp.applyUrl && jp.applyUrl.trim() && jp.applyUrl.toLowerCase() !== 'nan');
+
+      return {
+        ...jp,
+        recruitmentType: isScraped ? ('OFF_CAMPUS' as const) : (jp.recruitmentType ?? 'CAMPUS'),
+        sourceType: isScraped ? ('SCRAPER' as const) : jp.sourceType,
+      };
+    });
+  },
 
   getById: (id: number) =>
     request<JobPostingResponse>(`/job-postings/${id}`),
@@ -154,6 +168,7 @@ export const jobPostingApi = {
       postedAt: jp.postedAt ?? null,
       jobType: jp.jobType ?? null,
       roleCategory: jp.roleCategory ?? null,
+      department: jp.department ?? null,
       scrapedDate: jp.scrapedDate ?? null,
     };
   });

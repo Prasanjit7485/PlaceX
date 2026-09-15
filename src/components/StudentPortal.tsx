@@ -132,9 +132,6 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
   const [profileSkills, setProfileSkills] = useState(
     currentStudent.skills.join(', ')
   );
-  const [profileProjects, setProfileProjects] = useState(
-    currentStudent.projectsCount.toString()
-  );
   const [profileResume, setProfileResume] = useState(
     currentStudent.resumeText || ''
   );
@@ -159,7 +156,6 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
     setProfileCgpa(currentStudent.cgpa.toString());
     setProfileBacklogs(currentStudent.backlogs.toString());
     setProfileSkills(currentStudent.skills.join(', '));
-    setProfileProjects(currentStudent.projectsCount.toString());
     setProfileResume(currentStudent.resumeText || '');
     setResumeTextInput(currentStudent.resumeText || '');
   }, [currentStudent.id]);
@@ -331,7 +327,6 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
         .split(',')
         .map((s) => s.trim())
         .filter(Boolean),
-      projectsCount: parseInt(profileProjects) || 0,
       resumeText: profileResume
     };
 
@@ -482,8 +477,6 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
                 setProfileBacklogs={setProfileBacklogs}
                 profileSkills={profileSkills}
                 setProfileSkills={setProfileSkills}
-                profileProjects={profileProjects}
-                setProfileProjects={setProfileProjects}
                 profileResume={profileResume}
                 setProfileResume={setProfileResume}
                 uploadedResumeName={uploadedResumeName}

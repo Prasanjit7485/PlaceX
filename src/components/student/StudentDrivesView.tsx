@@ -2,8 +2,9 @@ import React, {
   useMemo,
   useState
 } from 'react';
-import { Briefcase, AlertCircle, Lock, Award, CheckCircle2 } from 'lucide-react';
+import { Briefcase, AlertCircle, Lock, Award, CheckCircle2, Globe } from 'lucide-react';
 import type { Student, PlacementDrive } from '../../mockData';
+import { StudentOffCampusView } from './StudentOffCampusView';
 
 interface StudentDrivesViewProps {
   currentStudent: Student;
@@ -147,25 +148,50 @@ export const StudentDrivesView: React.FC<StudentDrivesViewProps> = ({
     return { eligible: true, score: overallScore, matchingSkills };
   };
 
+// Safe string cleaner to eliminate literal "NaN", "null", "undefined", or empty whitespace strings
+const cleanString = (val?: string | number | null, fallback = 'Not specified'): string => {
+  if (val == null) return fallback;
+  const str = String(val).trim();
+  if (
+    !str ||
+    str.toLowerCase() === 'nan' ||
+    str.toLowerCase() === 'null' ||
+    str.toLowerCase() === 'undefined'
+  ) {
+    return fallback;
+  }
+  return str;
+};
+
+  if (selectedRecruitmentType === 'OFF_CAMPUS') {
+    return (
+      <StudentOffCampusView
+        onApply={onApply}
+        selectedRecruitmentType={selectedRecruitmentType}
+        onRecruitmentTypeChange={(type) => {
+          setSelectedRecruitmentType(type);
+          setSelectedRole('ALL');
+        }}
+      />
+    );
+  }
+
   return (
     <div className="flex flex-col gap-6 animate-fade-in">
       {/* Drives Top Header Banner */}
-      <div className="sp-page-header">
+      <div className="glass-card p-6 sm:p-7 rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50/80 via-indigo-50/40 to-white shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-display tracking-tight flex items-center gap-3">
             <Briefcase size={28} className="text-blue-600 shrink-0" />
-            {selectedRecruitmentType === 'ON_CAMPUS'
-              ? 'On-Campus Placement Drives'
-              : 'Off-Campus Jobs'}{' '}
-            ({filteredDrives.length})
+            On-Campus Placement Drives ({filteredDrives.length})
           </h1>
-          <p className="sp-page-subtitle">
+          <p className="text-slate-600 text-xs sm:text-sm mt-1.5 font-medium leading-relaxed">
             Real-time candidate compatibility match score calculated against corporate criteria.
           </p>
         </div>
 
         {isPlaced && (
-          <div className="px-4 py-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold flex items-center gap-2 shadow-xs">
+          <div className="px-4 py-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold flex items-center gap-2 shadow-xs shrink-0">
             <Award size={18} className="text-amber-600 shrink-0" />
             <span>Placement process concluded (Placed)</span>
           </div>
@@ -173,21 +199,18 @@ export const StudentDrivesView: React.FC<StudentDrivesViewProps> = ({
       </div>
 
       {/* Recruitment Controls & Role Filters */}
-      <div className="flex flex-wrap items-center justify-between gap-3.5 bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/90 shadow-2xs">
-        <div className="flex items-center gap-2.5">
+      <div className="glass-card p-6 sm:p-7 rounded-2xl border border-slate-200 bg-white shadow-xs flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-2 bg-slate-100 p-1.5 rounded-xl border border-slate-200 w-full sm:w-auto">
           <button
             type="button"
             onClick={() => {
               setSelectedRecruitmentType('ON_CAMPUS');
               setSelectedRole('ALL');
             }}
-            className={`px-5 py-2.5 rounded-xl font-extrabold text-xs sm:text-sm transition-all cursor-pointer ${
-              selectedRecruitmentType === 'ON_CAMPUS'
-                ? 'bg-blue-600 text-white shadow-md'
-                : 'bg-slate-50 text-slate-700 border border-slate-200/90 hover:bg-slate-100'
-            }`}
+            className="flex-1 sm:flex-initial px-8 py-3 rounded-lg font-bold text-xs sm:text-sm tracking-wide btn btn-primary text-white shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
           >
-            On Campus
+            <Briefcase size={16} />
+            <span>On Campus</span>
           </button>
 
           <button
@@ -196,25 +219,22 @@ export const StudentDrivesView: React.FC<StudentDrivesViewProps> = ({
               setSelectedRecruitmentType('OFF_CAMPUS');
               setSelectedRole('ALL');
             }}
-            className={`px-5 py-2.5 rounded-xl font-extrabold text-xs sm:text-sm transition-all cursor-pointer ${
-              selectedRecruitmentType === 'OFF_CAMPUS'
-                ? 'bg-blue-600 text-white shadow-md'
-                : 'bg-slate-50 text-slate-700 border border-slate-200/90 hover:bg-slate-100'
-            }`}
+            className="flex-1 sm:flex-initial px-8 py-3 rounded-lg font-bold text-xs sm:text-sm tracking-wide text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 transition-all cursor-pointer flex items-center justify-center gap-2"
           >
-            Off Campus
+            <Globe size={16} />
+            <span>Off Campus</span>
           </button>
         </div>
 
-        <div className="flex items-center gap-3 w-full sm:w-auto pt-2.5 sm:pt-0 border-t sm:border-t-0 border-slate-100">
-          <label className="text-xs sm:text-sm font-extrabold text-slate-600 shrink-0 uppercase tracking-wider">
+        <div className="flex items-center gap-3 w-full sm:w-auto pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-100">
+          <label className="text-xs sm:text-sm font-extrabold text-slate-600 shrink-0 uppercase tracking-wider font-display">
             Role
           </label>
 
           <select
             value={selectedRole}
             onChange={(e) => setSelectedRole(e.target.value)}
-            className="input-field min-w-44 sm:min-w-56 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-slate-50/80 border border-slate-200/90 cursor-pointer"
+            className="input-field min-w-44 sm:min-w-60 px-4 py-3 rounded-xl text-xs sm:text-sm font-bold bg-slate-50/80 border border-slate-200 cursor-pointer"
           >
             {availableRoles.map((role) => (
               <option key={role} value={role}>
@@ -275,56 +295,54 @@ export const StudentDrivesView: React.FC<StudentDrivesViewProps> = ({
                     </div>
                   </div>
 
-                  <p className="text-sm text-slate-600 leading-relaxed font-medium">
-                    {drive.description}
-                  </p>
+                  {cleanString(drive.description, '') && (
+                    <p className="text-sm text-slate-600 leading-relaxed font-medium">
+                      {cleanString(drive.description, 'No description provided.')}
+                    </p>
+                  )}
                 </div>
 
                 {drive.recruitmentType !== 'OFF_CAMPUS' ? (
-  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 bg-slate-50/90 p-4 rounded-xl border border-slate-200/80 text-xs">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 bg-slate-50/90 p-4 rounded-xl border border-slate-200/80 text-xs">
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                        Min CGPA
+                      </span>
+                      <span className="font-bold text-slate-900 text-xs">
+                        {drive.cgpaCutoff != null ? `${drive.cgpaCutoff} CGPA` : '7 CGPA'}
+                      </span>
+                    </div>
 
-    <div>
-      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-        Min CGPA
-      </span>
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                        Max Backlogs
+                      </span>
+                      <span className="font-bold text-slate-900 text-xs">
+                        {drive.maxBacklogs ?? 0}
+                      </span>
+                    </div>
 
-      <span className="font-bold text-slate-900 text-xs">
-        {drive.cgpaCutoff} CGPA
-      </span>
-    </div>
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                        Branches
+                      </span>
+                      <span className="font-bold text-slate-900 text-xs truncate block" title={drive.allowedBranches?.join(', ') || 'Computer Science, Information Technology, Electronics'}>
+                        {drive.allowedBranches && drive.allowedBranches.length > 0
+                          ? drive.allowedBranches.join(', ')
+                          : 'Computer Science, Information Technology, Electronics'}
+                      </span>
+                    </div>
 
-    <div>
-      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-        Max Backlogs
-      </span>
-
-      <span className="font-bold text-slate-900 text-xs">
-        {drive.maxBacklogs}
-      </span>
-    </div>
-
-    <div>
-      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-        Branches
-      </span>
-
-      <span className="font-bold text-slate-900 text-xs truncate block">
-        {drive.allowedBranches?.join(', ') || 'All'}
-      </span>
-    </div>
-
-    <div>
-      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-        Grad Batch
-      </span>
-
-      <span className="font-bold text-indigo-600 text-xs">
-        {drive.eligibleBatch || 'Not specified'}
-      </span>
-    </div>
-
-  </div>
-) : (
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                        Grad Batch
+                      </span>
+                      <span className="font-bold text-indigo-600 text-xs">
+                        {cleanString(drive.eligibleBatch, 'Not specified')}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 bg-slate-50/90 p-4 rounded-xl border border-slate-200/80 text-xs">
 
     <div>

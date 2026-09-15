@@ -16,8 +16,6 @@ interface StudentProfileViewProps {
   setProfileBacklogs: (v: string) => void;
   profileSkills: string;
   setProfileSkills: (v: string) => void;
-  profileProjects: string;
-  setProfileProjects: (v: string) => void;
   profileResume: string;
   setProfileResume: (v: string) => void;
   uploadedResumeName: string;
@@ -45,8 +43,6 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
   setProfileBacklogs,
   profileSkills,
   setProfileSkills,
-  profileProjects,
-  setProfileProjects,
   profileResume,
   setProfileResume,
   uploadedResumeName,
@@ -139,7 +135,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
             2. Academic Metrics & Skills Catalog
           </h3>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className="flex flex-col gap-2">
               <label className="text-sm font-bold text-slate-700">Cumulative CGPA (0-10)</label>
               <input
@@ -162,18 +158,6 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
                 min="0"
                 value={profileBacklogs}
                 onChange={(e) => setProfileBacklogs(e.target.value)}
-                className="input-field"
-              />
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-bold text-slate-700">Projects Built</label>
-              <input
-                type="number"
-                required
-                min="0"
-                value={profileProjects}
-                onChange={(e) => setProfileProjects(e.target.value)}
                 className="input-field"
               />
             </div>

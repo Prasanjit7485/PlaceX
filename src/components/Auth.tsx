@@ -146,7 +146,6 @@ export const Auth: React.FC<AuthProps> = ({
 
   const [regCgpa, setRegCgpa] = useState('8.0');
   const [regSkills, setRegSkills] = useState('React, TypeScript, JavaScript');
-  const [regProjects, setRegProjects] = useState('2');
   const [regResume, setRegResume] = useState(
     'Enthusiastic developer skilled in frontend applications.'
   );
@@ -357,7 +356,7 @@ export const Auth: React.FC<AuthProps> = ({
         .map((skill) => skill.trim())
         .filter(Boolean),
 
-      projectsCount: parseInt(regProjects) || 0,
+      projectsCount: 0,
 
       resumeText: regResume,
 
@@ -1395,28 +1394,7 @@ export const Auth: React.FC<AuthProps> = ({
                         </div>
                       </div>
 
-                      <div className="auth-input-group">
 
-                        <label className="auth-input-label">
-                          Projects Count
-                        </label>
-
-                        <div className="auth-input-box">
-
-                          <input
-                            type="number"
-                            value={regProjects}
-                            onChange={(e) =>
-                              setRegProjects(
-                                e.target.value
-                              )
-                            }
-                            min="0"
-                            className="auth-input-field"
-                          />
-
-                        </div>
-                      </div>
 
                       <div className="auth-input-group">
 

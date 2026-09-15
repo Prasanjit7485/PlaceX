@@ -118,6 +118,7 @@ export interface PlacementDrive {
   postedAt?: string | null;
   jobType?: string | null;
   roleCategory?: string | null;
+  department?: string | null;
   scrapedDate?: string | null;
 }
 export const INITIAL_DRIVES: PlacementDrive[] = [

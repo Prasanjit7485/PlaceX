@@ -63,6 +63,7 @@ export interface JobPostingResponse {
   companyName?: string | null;
 
   location?: string | null;
+  department?: string | null;
 
   // Recruitment classification
   recruitmentType?: 'CAMPUS' | 'OFF_CAMPUS';
@@ -140,6 +141,7 @@ export interface DriveWithCompany {
   postedAt?: string | null;
   jobType?: string | null;
   roleCategory?: string | null;
+  department?: string | null;
   scrapedDate?: string | null;
 }
 export type RecruiterStatus = "PENDING" | "APPROVED" | "REJECTED";

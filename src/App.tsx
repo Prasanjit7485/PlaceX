@@ -123,7 +123,7 @@ const ProtectedRoute = ({
    LANDING PAGE NAVIGATION
 ========================================================= */
 
-function NavLinksWithSlidingUnderline() {
+function NavLinksWithSlidingUnderline({ session }: { session: Session | null }) {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -149,6 +149,22 @@ function NavLinksWithSlidingUnderline() {
     hoveredPath !== null
       ? hoveredPath
       : location.pathname;
+
+  const getPortalPath = () => {
+    if (!session) return '/auth?mode=login';
+    switch (session.role) {
+      case 'student':
+        return '/student-portal';
+      case 'admin':
+        return '/admin-portal';
+      case 'recruiter':
+        return '/recruiter-portal';
+      case 'alumni':
+        return '/alumni-portal';
+      default:
+        return '/auth?mode=login';
+    }
+  };
 
   return (
     <nav
@@ -213,11 +229,11 @@ function NavLinksWithSlidingUnderline() {
 
       <button
         onClick={() =>
-          navigate('/auth?mode=login')
+          navigate(session ? getPortalPath() : '/auth?mode=login')
         }
-        className="landing-nav-btn"
+        className="landing-nav-btn font-bold cursor-pointer"
       >
-        Sign In
+        {session ? 'Go to Portal →' : 'Sign In'}
       </button>
     </nav>
   );
@@ -230,6 +246,9 @@ function NavLinksWithSlidingUnderline() {
 
 function AppContent() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const isPublicRoute = ['/', '/features', '/how-it-works'].includes(location.pathname);
 
 
   /* =======================================================
@@ -2003,7 +2022,7 @@ const handleDeleteReferral = async (
             LOGGED-IN USER HEADER
         ================================================= */}
 
-        {session ? (
+        {!isPublicRoute && session ? (
 
           <div className="user-nav-profile">
 
@@ -2208,7 +2227,7 @@ const handleDeleteReferral = async (
              PUBLIC NAVIGATION
           ================================================= */
 
-          <NavLinksWithSlidingUnderline />
+          <NavLinksWithSlidingUnderline session={session} />
 
         )}
 

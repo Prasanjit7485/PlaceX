@@ -699,6 +699,12 @@ export const AlumniPortal: React.FC<AlumniPortalProps> = ({
           {/* REFERRAL TAB */}
           {activeTab === 'referral' && (
             <div className="flex flex-col gap-6 animate-fade-in pb-10">
+              <div className="flex flex-col items-center justify-center p-8 sm:p-12 rounded-3xl bg-rose-50 border-2 border-rose-300 text-center gap-3 my-2 shadow-xs">
+                <h2 className="text-2xl sm:text-4xl font-black text-rose-600 font-display tracking-tight uppercase">
+                  referral is not available now , the feature is coming soon
+                </h2>
+              </div>
+
               <div className="sp-page-header">
                 <div>
                   <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-display tracking-tight flex items-center gap-3">
